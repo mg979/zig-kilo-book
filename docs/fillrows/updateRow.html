@@ -1,0 +1,406 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Updating a row - Build your own text editor in Zig</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href=".././mdbook-admonish.css">
+        <link rel="stylesheet" href=".././theme/css/code-blocks.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build your own text editor in Zig</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="updating-a-row"><a class="header" href="#updating-a-row">Updating a row</a></h1>
+<p>Updating the row means that we must update the <code>render</code> field from the <code>chars</code>
+field. That is, we must generate what will be actually rendered on screen.</p>
+<p>The only way they will differ, at this point, is given by the possible presence
+of tab characters in our <code>chars</code> ArrayList.</p>
+<p>Let's say we want to make this <code>tabstop</code> an option, so that it can be
+configured. We create a <code>src/option.zig</code> file and paste the following:</p>
+<div class="code-title">option.zig</div>
+<pre><code class="language-zig">//! Editor options. For now they are hard-coded and cannot be modified from
+//! inside the editor, neither are read from a configuration file.
+
+/// Number of spaces a tab character accounts for
+pub var tabstop: u8 = 8;
+</code></pre>
+<p>As the description says, they're hard coded, but we'll still use a module, so
+that we can test different options ourselves if we want.</p>
+<p>We'll also have to import it in the Constants section:</p>
+<div class="code-title">Editor.zig</div>
+<pre><code class="language-zig">const opt = @import("option.zig");
+</code></pre>
+<h3 id="rowat-and-currentrow"><a class="header" href="#rowat-and-currentrow">rowAt() and currentRow()</a></h3>
+<p>We'll write other helper functions that we'll use a lot:</p>
+<div class="code-title">Editor.zig</div>
+<pre><code class="language-zig">/// Get the row pointer at index `ix`.
+fn rowAt(e: *Editor, ix: usize) *t.Row {
+    return &amp;e.buffer.rows.items[ix];
+}
+
+/// Get the row pointer at cursor position.
+fn currentRow(e: *Editor) *t.Row {
+    return &amp;e.buffer.rows.items[e.view.cy];
+}
+</code></pre>
+<p>Because frankly, to take that pointer all the times becomes annoying after
+a while.</p>
+<p>We shouldn't worry about performance loss for too many function calls: Zig
+lacks macros, so the compiler tries to inline small functions when it can.
+Writing small functions is actually the Zig way to write macros.</p>
+<h3 id="updaterow"><a class="header" href="#updaterow">updateRow()</a></h3>
+<p>The purpose of this function is to update the <em>rendered</em> row, which is what we
+see on screen.</p>
+<div class="code-title">Editor.zig</div>
+<pre><code class="language-zig">/// Update row.render, that is the visual representation of the row.
+/// Performs a syntax update at the end.
+fn updateRow(e: *Editor, ix: usize) !void {
+    // code to come...
+}
+</code></pre>
+<h3 id="allocatorrealloc"><a class="header" href="#allocatorrealloc">Allocator.realloc()</a></h3>
+<div class="code-title">Editor.zig: updateRow()</div>
+<pre><code class="language-zig">    const row = e.rowAt(ix);
+
+    // get the length of the rendered row and reallocate
+    const rlen = // ??? total size of the rendered row ???
+    row.render = try e.alc.realloc(row.render, rlen);
+</code></pre>
+<p>As explained before, I chose to make <code>row.render</code> a simple array because we can
+desume its size before any reallocation happens. Most of the time
+a reallocation would not result in a new allocation, because <code>realloc()</code> does
+the following:</p>
+<ul>
+<li>if the previous size is 0 (first time the row is updated) and new size is
+bigger, there is an allocation</li>
+<li>if the new size is smaller (characters are deleted), it is resized</li>
+<li>if the new size is slightly bigger (such as when inserting a single
+character while typing), most of the times it will extend the array without
+reallocating</li>
+<li>it would only allocate when the size is bigger and it's not possible to
+extend the array</li>
+</ul>
+<p>An ArrayList would bring some benefits, but also increase total memory usage.
+For now we'll keep it simple, but we'll keep it in mind.</p>
+<h3 id="looping-characters-of-the-real-row"><a class="header" href="#looping-characters-of-the-real-row">Looping characters of the real row</a></h3>
+<div class="code-title">Editor.zig: updateRow()</div>
+<pre><code class="language-zig">    var idx: usize = 0;
+    var i: usize = 0;
+
+    while (i &lt; row.chars.items.len) : (i += 1) {
+        if (row.chars.items[i] == '\t') {
+            row.render[idx] = ' ';
+            idx += 1;
+            while (idx % opt.tabstop != 0) : (idx += 1) {
+                row.render[idx] = ' ';
+            }
+        }
+        else {
+            row.render[idx] = row.chars.items[i];
+            idx += 1;
+        }
+    }
+</code></pre>
+<p>What the loop does, is that it inserts in <code>row.render</code> the same character when
+it's not a tab, otherwise it will convert it to spaces, making some
+considerations in the process:</p>
+<ul>
+<li>inside the loop, <code>idx</code> is the current column in the rendered row</li>
+<li>we want a minimum of one space, so we add it, and increase <code>idx</code></li>
+<li>we want to see if there are more spaces to add, and this is true if <code>(idx % tabstop != 0)</code></li>
+</ul>
+<p>For example, assuming <code>tabstop = 8</code>, at the start of a line, where <code>idx</code> is 0,
+a <kbd>Tab</kbd> would insert 8 spaces.</p>
+<p>But a <kbd>Tab</kbd> typed in the middle of a row won't add necessarily
+<code>tabstop</code> spaces, because the starting column in the rendered row may be such
+that <code>idx % 8</code> is greater than 1, so if we insert a tab at <code>idx = 12</code>, we have
+a space insertion, which makes <code>idx = 13</code>, then 5 more spaces, because <code>13 % 8 = 5</code>.</p>
+<h3 id="computing-beforehand-the-size-of-the-rendered-row"><a class="header" href="#computing-beforehand-the-size-of-the-rendered-row">Computing beforehand the size of the rendered row</a></h3>
+<pre><code class="language-zig">    // get the length of the rendered row and reallocate
+    const rlen = // ??? total size of the rendered row ???
+    row.render = try e.alc.realloc(row.render, rlen);
+</code></pre>
+<p>We didn't assign anything to <code>rlen</code>. How do we know how long will be our
+rendered row? We'll have do something similar to what we do inside the loop in
+<code>updateRow()</code>, but we just increase <code>idx</code> and return the final value. But often
+in our program we'll have to convert a real column index to an index in the
+rendered row, so we write a function that does that.</p>
+<p>We call the function <code>cxToRx()</code> and the call becomes:</p>
+<div class="code-diff-removed">
+<pre><code class="language-zig">    const rlen = // ??? total size of the rendered row ???
+</code></pre>
+</div>
+<pre><code class="language-zig">    const rlen = row.cxToRx(row.chars.items.len);
+</code></pre>
+<p>That is, we calculate the index in the rendered row for the last column of the
+real row.</p>
+<p>We put this function in <code>Row.zig</code>, because it is in agreement with how we
+wanted to design our types: they shouldn't change the state of the Editor, but
+they can return their own state. Here Row will not modify itself, so it's ok.</p>
+<div class="code-title">Row.zig: methods section</div>
+<pre><code class="language-zig">/// Calculate the position of a real column in the rendered row.
+pub fn cxToRx(row: *Row, cx: usize) usize {
+    var rx: usize = 0;
+    for (0..cx) |i| {
+        if (row.chars.items[i] == '\t') {
+            rx += (opt.tabstop - 1) - (rx % opt.tabstop);
+        }
+        rx += 1;
+    }
+    return rx;
+}
+</code></pre>
+<p>The loop is a bit different here, because instead of two nested loops we have
+only one. That's because we don't need to modify the row in any way, so we can
+calculate the needed spaces in a single operation. Which is quite a bit more
+difficult to understand, to be honest. Feel free to recreate an example loop
+step by step as we did above.</p>
+<p>Also this function needs to import <code>option.zig</code>, so do that.</p>
+<div id="admonition-note" class="admonition admonish-note" role="note" aria-labelledby="admonition-note-title">
+<div class="admonition-title">
+<div id="admonition-note-title">
+<p>Note</p>
+</div>
+<a class="admonition-anchor-link" href="#admonition-note"></a>
+</div>
+<div>
+<p>We don't handle multi-byte characters, and we don't have virtual text of any
+kind. In a real editor this function would be more complex.</p>
+</div>
+</div>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../fillrows/insertRow.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../fillrows/test.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../fillrows/insertRow.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../fillrows/test.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

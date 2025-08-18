@@ -1,0 +1,434 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>The cursor position method - Build your own text editor in Zig</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href=".././mdbook-admonish.css">
+        <link rel="stylesheet" href=".././theme/css/code-blocks.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Build your own text editor in Zig</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="the-cursor-position-method"><a class="header" href="#the-cursor-position-method">The cursor position method</a></h1>
+<p>In case of failure, we'll have to resort to a second method.</p>
+<p>We replace the commented line in <code>getWindowSize()</code> with:</p>
+<div class="code-diff-removed">
+<pre><code class="language-zig">    if (linux.winsize(&amp;wsz) == -1 or wsz.col == 0) {
+        // fallback method will be here
+</code></pre>
+</div>
+<pre><code class="language-zig">    if (linux.winsize(&amp;wsz) == -1 or wsz.col == 0) {
+        screen = try getCursorPosition();
+</code></pre>
+<p>Our <code>getCursorPosition()</code> function also goes just below <code>getWindowSize()</code>:</p>
+<div class="code-title">ansi.zig</div>
+<pre><code class="language-zig">/// Get the cursor position, to determine the window size.
+pub fn getCursorPosition() !t.Screen {
+    // code to come...
+}
+</code></pre>
+<p>What should we do in there? The idea is to maximize the terminal screen, so
+that the cursor is positioned to the bottom-right corner, and read the current
+row and column from there.</p>
+<p>For both things, we need issue escape sequences to the terminal.</p>
+<ul>
+<li>
+<p>to maximize the screen, we'll issue two sequences in a row, one to set the
+columns and one to set the rows.</p>
+</li>
+<li>
+<p>to read the cursor position, we'll issue a sequence, and read the response of
+the terminal in a <code>[]u8</code> buffer</p>
+</li>
+</ul>
+<h3 id="ansi-escape-sequences"><a class="header" href="#ansi-escape-sequences">ANSI escape sequences</a></h3>
+<p>We'll define the following constants in <code>ansi.zig</code>:</p>
+<div class="code-title">ansi.zig</div>
+<pre><code class="language-zig">/// Control Sequence Introducer: ESC key, followed by '[' character
+pub const CSI = "\x1b[";
+
+/// The ESC character
+pub const ESC = '\x1b';
+
+// Sets the number of column and rows to very high numbers, trying to maximize
+// the window.
+pub const WinMaximize = CSI ++ "999C" ++ CSI ++ "999B";
+
+// Reports the cursor position (CPR) by transmitting ESC[n;mR, where n is the
+// row and m is the column
+pub const ReadCursorPos = CSI ++ "6n";
+</code></pre>
+<h3 id="linuxwrite"><a class="header" href="#linuxwrite"><code>linux.write()</code></a></h3>
+<p>How exactly do we send these sequences? We're back into <code>linux.zig</code>.</p>
+<div class="code-title">linux.zig</div>
+<pre><code class="language-zig">// Write bytes to stdout, return error if the requested amount of bytes
+// couldn't be written.
+pub fn write(buf: []const u8) !void {
+    if (try posix.write(STDOUT_FILENO, buf) != buf.len) {
+        return error.WriteIncomplete;
+    }
+}
+</code></pre>
+<p><code>WriteIncomplete</code> in this case is an error I just made up, probably it's not
+a very good way to handle incomplete writes, in the sense that we should
+probaby retry. In my defense, I can say that the original C editor did this:</p>
+<div class="code-title">C</div>
+<pre><code class="language-c">  if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) return -1;
+</code></pre>
+<p>which means that it gave up all the same. Hey... I think we're trying hard
+enough already. At least for our humble editor, that is.</p>
+<h3 id="back-to-getcursorposition"><a class="header" href="#back-to-getcursorposition">Back to <code>getCursorPosition()</code></a></h3>
+<p>Now it's hopefully clear what we'll do:</p>
+<ol>
+<li>issue sequences to maximize screen and to report cursor position</li>
+<li>read the response in a <code>[]u8</code> buffer</li>
+<li>parse the result, to extract the screen size</li>
+</ol>
+<div class="code-title">ansi.zig: getCursorPosition()</div>
+<pre><code class="language-zig">    var buf: [32]u8 = undefined;
+
+    try linux.write(WinMaximize ++ ReadCursorPos);
+
+    var nread = try linux.readChars(&amp;buf);
+</code></pre>
+<p>What's that <code>readChars()</code> over there?</p>
+<p>This is actually the function that we'll use to read all input from <code>stdin</code>, so
+it's worth taking care of it right now. It's not too different from the
+<code>readChar()</code> function we wrote in <code>main.zig</code> and that we carelessly deleted
+when we didn't need it anymore.</p>
+<h3 id="linuxreadchars"><a class="header" href="#linuxreadchars"><code>linux.readChars()</code></a></h3>
+<div class="code-title">linux.zig</div>
+<pre><code class="language-zig">/// Keep reading from stdin until we get a valid character, ignoring
+/// .WouldBlock errors.
+pub fn readChars(buf: []u8) !usize {
+    while (true) {
+        const n = posix.read(STDIN_FILENO, buf) catch |err| switch (err) {
+            error.WouldBlock =&gt; continue,
+            else =&gt; return err,
+        };
+        if (n &gt;= 1) return n;
+    }
+}
+</code></pre>
+<p>Let's compare it with the previous <code>readChar()</code> function which was:</p>
+<pre><code class="language-zig">// Read from stdin into `buf`, return the number of read characters.
+fn readChar(buf: []u8) !usize {
+    return try posix.read(STDIN_FILENO, buf);
+}
+</code></pre>
+<p>The main difference is that now we are in raw mode, and there is a <code>read()</code>
+timeout in place, so we must handle the error which happens when the timeout
+kicks in. This error is <code>.WouldBlock</code>, and we must ignore it, that is, we must
+keep reading until we read something, or a different error is returned by
+<code>posix.read()</code>.</p>
+<p>If <code>posix.read()</code> finally returns a positive number because it read something,
+we return it. If it didn't read anything, it's probably because we didn't type
+anything, and the loop continues.</p>
+<h3 id="back-to-getcursorposition-1"><a class="header" href="#back-to-getcursorposition-1">Back to <code>getCursorPosition()</code></a></h3>
+<p>So now we got the response from the terminal, and we read it inside our <code>[]u8</code>
+buffer.</p>
+<div class="code-title">ansi.zig: getCursorPosition()</div>
+<div class="code-diff-added">
+<pre><code class="language-zig">    var nread = try linux.readChars(&amp;buf);
+</code></pre>
+</div>
+<pre><code class="language-zig">    if (nread &lt; 5) return error.CursorError;
+</code></pre>
+<p>For a response to be valid, it should follow this format:</p>
+<pre><code>ESC ] rows ; cols R
+</code></pre>
+<p>for example, <code>0x1b]50;120R</code>. This sequence has a minimum of 5 characters, plus
+the final <code>R</code>. I think in some occasions I couldn't read the <code>R</code> character
+immediately, but maybe I've been doing something wrong? Anyway this is what we
+do:</p>
+<div class="code-title">ansi.zig: getCursorPosition()</div>
+<pre><code class="language-zig">    // we should ignore the final R character
+    if (buf[nread - 1] == 'R') {
+        nread -= 1;
+    }
+    // not there yet? we will ignore it, but it should be there
+    else if (try linux.readChars(buf[nread..]) != 1 or buf[nread] != 'R') {
+        return error.CursorError;
+    }
+</code></pre>
+<p>That is, we keep reading until we get this <code>R</code> character, if it's not yet in
+our buffer. Since we don't want to overwrite our previous response, we pass
+a slice that starts at <code>nread</code>, which is the number of characters that have
+been read until now. When <code>R</code> is finally read, <code>buf[nread]</code> should hold it.</p>
+<p>If the first two characters aren't <code>ESC ]</code>, we error out:</p>
+<div class="code-title">ansi.zig: getCursorPosition()</div>
+<pre><code class="language-zig">    if (buf[0] != ESC or buf[1] != '[') return error.CursorError;
+</code></pre>
+<p>Finally we must parse the number of rows and columns. The original C code used
+<code>sscanf()</code> for this purpose, but we won't use <code>libc</code> in this project. We parse
+it by hand.</p>
+<div class="code-title">ansi.zig: getCursorPosition()</div>
+<pre><code class="language-zig">    var screen = t.Screen{};
+    var semicolon: bool = false;
+    var digits: u8 = 0;
+
+    // no sscanf, format to read is "row;col"
+    // read it right to left, so we can read number of digits
+    // stop before the CSI, so at index 2
+    var i = nread;
+    while (i &gt; 2) {
+        i -= 1;
+        if (buf[i] == ';') {
+            semicolon = true;
+            digits = 0;
+        }
+        else if (semicolon) {
+            screen.rows += (buf[i] - '0') * try std.math.powi(usize, 10, digits);
+            digits += 1;
+        } else {
+            screen.cols += (buf[i] - '0') * try std.math.powi(usize, 10, digits);
+            digits += 1;
+        }
+    }
+    if (screen.cols == 0 or screen.rows == 0) {
+        return error.CursorError;
+    }
+    return screen;
+</code></pre>
+<p>If you did programming exercises before, this method of parsing integers should
+be familiar. The Zig standard library has a function for this purpose
+(<code>std.fmt.parseInt</code>), but in this case it wouldn't have spared us much trouble.
+There's a semicolon between the numbers, and we would have needed to track the
+start and end position of both numbers.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../screensize/ioctl.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../screensize/test_winsize.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../screensize/ioctl.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../screensize/test_winsize.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

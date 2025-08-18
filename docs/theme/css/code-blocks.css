@@ -1,0 +1,475 @@
+/***********************************************************************
+ *
+ *                              Variables
+ *
+ **********************************************************************/
+
+:root {
+    --code-block-bg: #f6f7f6;
+    --deletion-bg: #ffeef0;
+    --addition-bg: #f0fff4;
+    --deletion-fg: #b31d28;
+    --addition-fg: #22863a;
+    --code-title-bg: var(--sidebar-bg);
+    --code-title-fg: var(--sidebar-active);
+}
+
+.light {
+    --code-block-bg: #e6e7e6;
+    --deletion-bg: #ffced0;
+    --addition-bg: #d0ffe4;
+    --code-title-bg: hsl(0, 0%, 85%);
+}
+
+.navy, .coal {
+    --deletion-bg: #3c1618;
+    --addition-bg: #243724;
+    --deletion-fg: #ff6969;
+    --addition-fg: #56d364;
+}
+
+.ayu {
+    --deletion-bg: #3c1618;
+    --addition-bg: #1c2f1c;
+    --deletion-fg: #ff6969;
+    --addition-fg: #56d364;
+}
+
+.rust {
+    --code-block-bg: #eeefee;
+    --deletion-bg: #ffe7b8;
+    --deletion-fg: #8d3034;
+    --addition-bg: #c0fec0;
+    --addition-fg: #2d4a2d;
+}
+
+/***********************************************************************
+ *
+ *                              Smaller code box
+ *
+ **********************************************************************/
+
+.code-block-small {
+    font-size: 0; /* Collapse whitespace */
+    margin: 0;
+    padding: 0;
+}
+
+pre.code-block-small {
+    margin: 0;
+}
+
+.code-block-small code {
+    font-size: 14px; /* Restore font size */
+    display: block;
+    white-space: pre;
+    line-height: 1.4;
+    margin: 0;
+    padding: 5px 10px;
+}
+
+/***********************************************************************
+ *
+ *                          Code block title
+ *
+ **********************************************************************/
+
+.code-title {
+    background-color: var(--code-title-bg);
+    color: var(--code-title-fg);
+    border: 1px solid var(--sidebar-spacer);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 8px 12px;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 0;
+    margin-top: 40px;
+}
+
+.ayu .code-title {
+    background-color: #282d3f;
+    color: var(--fg);
+}
+
+.rust .code-title {
+    background-color: var(--theme-popup-border);
+    color: var(--theme-popup-bg);
+    border: 1px solid var(--theme-popup-border);
+}
+
+/* For normal code blocks */
+.code-title + .highlight pre,
+.code-title + pre {
+    margin-top: 0;
+    border-radius: 0 0 6px 6px;
+    border-top: none;
+}
+
+/* For diff blocks */
+.code-title + .code-diff-removed,
+.code-title + .code-diff-added,
+.code-title + .code-diff-added-top {
+    border-radius: 0 6px 6px 6px;
+    border-top: none;
+    margin-top: 0 !important;
+}
+
+.code-title + .code-diff-removed pre,
+.code-title + .code-diff-added pre,
+.code-title + .code-diff-added-top pre {
+    border-radius: 0;
+    margin-top: 0 !important;
+}
+
+/***********************************************************************
+ *
+ *                              Diff blocks
+ *
+ **********************************************************************/
+
+/* Base diff containers */
+.code-diff-removed {
+    margin-bottom: 0;
+    background-color: var(--deletion-bg);
+    border-radius: 6px;
+    border-left: 4px solid #d73a49;
+    padding: 0;
+}
+
+.code-diff-added-top {
+    margin-bottom: 0;
+    background-color: var(--addition-bg);
+    border-radius: 6px;
+    border-left: 4px solid var(--addition-fg);
+    padding: 0;
+}
+
+.code-diff-added {
+    margin-bottom: 0;
+    padding: 0;
+}
+
+/* Content inside diff containers */
+.code-diff-removed pre,
+.code-diff-added pre,
+.code-diff-added-top pre {
+    margin: 0;
+    border: none;
+    border-radius: 6px 6px 0 0;
+    background-color: transparent !important;
+}
+
+/* Bottom blocks (for code-diff-added) */
+.code-diff-added + .highlight,
+.code-diff-added + pre {
+    margin-top: 0;
+    background-color: var(--addition-bg);
+    border-radius: 0 0 6px 6px;
+    border-left: 4px solid var(--addition-fg);
+}
+
+.code-diff-removed + .highlight,
+.code-diff-removed + pre {
+    margin-top: 0;
+    background-color: var(--deletion-bg);
+    border-radius: 0 0 6px 6px;
+}
+
+/* Override highlight.js backgrounds */
+.code-diff-removed .hljs,
+.code-diff-removed + .highlight .hljs,
+.code-diff-added-top .hljs,
+.code-diff-added + .highlight .hljs,
+.code-diff-added + pre .hljs {
+    background-color: transparent !important;
+}
+
+.code-diff-added + .highlight pre,
+.code-diff-added + pre,
+.code-diff-removed + .highlight pre,
+.code-diff-removed + pre {
+    background-color: transparent !important;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    margin-top: 0;
+}
+
+/* Dark theme text color override */
+.navy .code-diff-removed *,
+.navy .code-diff-removed + .highlight *,
+.coal .code-diff-removed *,
+.coal .code-diff-removed + .highlight *,
+.ayu .code-diff-removed *,
+.ayu .code-diff-removed + .highlight * {
+    background-color: var(--deletion-bg);
+}
+
+/***********************************************************************
+ *
+ *                 Addition diff block (bottom is green)
+ *
+ **********************************************************************/
+
+/* Addition diff container - normal styling for top block */
+.code-diff-added {
+    margin-bottom: 0;
+    padding: 0;
+}
+
+/* Top block (original code) - normal styling */
+.code-diff-added pre {
+    margin-top: 30px;
+    margin-bottom: 0;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    border: none;
+}
+
+/* Bottom block (added code) - green styling */
+.code-diff-added + .highlight,
+.code-diff-added + pre {
+    margin-top: 0;
+    background-color: var(--addition-bg);
+    border-radius: 0 0 6px 6px;
+    border-left: 4px solid var(--addition-fg);
+}
+
+/* Force background on highlight.js elements for added code */
+.code-diff-added + .highlight .hljs,
+.code-diff-added + pre .hljs {
+    background-color: var(--addition-bg) !important;
+}
+
+/* Also override any specific highlight.js background classes */
+.code-diff-added + .highlight pre,
+.code-diff-added + pre {
+    background-color: var(--addition-bg) !important;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    margin-top: 0;
+}
+
+/***********************************************************************
+ *
+ *                 Addition diff block (top is green)
+ *
+ **********************************************************************/
+
+/* Addition diff container - green styling for top block */
+.code-diff-added-top {
+    margin-bottom: 0;
+    background-color: var(--addition-bg);
+    border-radius: 6px;
+    border-left: 4px solid var(--addition-fg);
+    padding: 0;
+}
+
+/* Top block (added code) - green styling */
+.code-diff-added-top pre {
+    margin-bottom: 0;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    background-color: transparent !important;
+    border: none;
+}
+
+/* Bottom block (original code) - normal styling */
+.code-diff-added-top + .highlight,
+.code-diff-added-top + pre {
+    margin-top: 0;
+    border-radius: 0 0 6px 6px;
+}
+
+.code-diff-added-top + .highlight pre,
+.code-diff-added-top + pre {
+    border-top: 1px solid rgba(0,0,0,0.1);
+    margin-top: 0;
+}
+
+/* Force background on highlight.js elements for added code (top block) */
+.code-diff-added-top .hljs {
+    background-color: var(--addition-bg) !important;
+}
+
+/***********************************************************************
+ *
+ *                        Universal stacking rules
+ *
+ **********************************************************************/
+
+/* Any block following any other block loses top margin and radius */
+.highlight + .code-diff-removed,
+.highlight + .code-diff-added,
+.highlight + .code-diff-added-top,
+pre + .code-diff-removed,
+pre + .code-diff-added,
+pre + .code-diff-added-top,
+.code-diff-removed + pre,
+.code-diff-added + pre,
+.code-diff-added-top + pre,
+.code-diff-removed + .code-diff-added-top,
+.code-diff-removed + .code-diff-added,
+.code-diff-added + .code-diff-removed,
+.code-diff-added-top + .code-diff-removed,
+.code-diff-added-top + .code-diff-added {
+    border-radius: 0 6px 6px 6px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    margin-top: 0 !important;
+}
+
+/* Last block in stack gets bottom radius */
+.code-diff-removed + .highlight,
+.code-diff-added + .highlight,
+.code-diff-added-top + .highlight,
+.code-diff-removed + pre,
+.code-diff-added + pre,
+.code-diff-added-top + pre {
+    border-radius: 0 0 6px 6px;
+}
+
+/* Remove margins from preceding blocks */
+.highlight:has(+ .code-diff-removed),
+.highlight:has(+ .code-diff-added),
+.highlight:has(+ .code-diff-added-top),
+pre:has(+ .code-diff-removed),
+pre:has(+ .code-diff-added),
+pre:has(+ .code-diff-added-top) {
+    margin-bottom: 0 !important;
+}
+
+/* Title integration */
+.code-title + .code-diff-removed,
+.code-title + .code-diff-added,
+.code-title + .code-diff-added-top {
+    border-radius: 0 6px 6px 6px;
+    border-top: none;
+    margin-top: 0 !important;
+}
+
+.code-title + .code-diff-removed pre,
+.code-title + .code-diff-added pre,
+.code-title + .code-diff-added-top pre {
+    border-radius: 0;
+    margin-top: 0 !important;
+}
+
+/***********************************************************************
+ *
+ *                        Numbered tables
+ *
+ **********************************************************************/
+
+.numbered-table-no-bar,
+.numbered-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5em 0;
+    table-layout: fixed;
+}
+
+.numbered-table-no-bar caption,
+.numbered-table caption {
+    text-align: left;
+}
+
+.numbered-table-no-bar td,
+.numbered-table-no-bar th,
+.numbered-table td,
+.numbered-table th {
+    padding: 6px 16px;
+    border: 1px solid var(--table-border-color, #e5e7eb);
+    vertical-align: middle;
+    line-height: 1.4;
+}
+
+/* Make headers super thin */
+.numbered-table-no-bar th,
+.numbered-table th {
+    padding: 2px 16px !important;
+    line-height: 1.0 !important;
+    height: 2px !important;
+}
+
+.numbered-table-no-bar td:first-child,
+.numbered-table td:first-child {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    text-align: center;
+    font-weight: bold;
+    background-color: var(--table-alternate-bg, #f8fafc);
+    padding: 6px 4px !important;
+    white-space: nowrap;
+}
+
+.numbered-table th:first-child {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    text-align: center;
+    font-weight: bold;
+    background-color: var(--table-header-bg) !important;
+    padding: 2px 4px !important;
+    white-space: nowrap;
+    height: 2px !important;
+}
+
+.numbered-table-no-bar td:last-child,
+.numbered-table td:last-child {
+    width: calc(100% - 40px) !important;
+    background-color: var(--bg, #ffffff);
+    min-width: 35em !important;
+    padding: 6px 16px !important;
+}
+
+.numbered-table th:last-child {
+    background-color: var(--table-header-bg) !important;
+    padding: 2px 16px !important;
+    height: 2px !important;
+}
+
+.numbered-table-no-bar tr:hover td:first-child,
+.numbered-table tr:hover td:first-child {
+    background-color: var(--table-alternate-bg, #f8fafc);
+}
+
+.numbered-table-no-bar tr:hover td:last-child,
+.numbered-table tr:hover td:last-child {
+    background-color: var(--bg, #ffffff);
+}
+
+/* No header bar variant */
+.numbered-table-no-bar th:first-child {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    height: 0px !important;
+    padding: 0px !important;
+}
+
+.numbered-table-no-bar th:last-child {
+    height: 0px !important;
+    padding: 0px !important;
+}
+
+/***********************************************************************
+ *
+ *                        H4 Headings
+ *
+ **********************************************************************/
+
+h4 {
+    border-top: 4px solid var(--table-header-bg);
+    padding-top: 0.2em;
+    margin-top: 3em;
+    margin-bottom: 1em;
+    font-weight: bold;
+    font-style: italic;
+}
+
+/* Remove top border and padding for the first h4 on a page */
+h4:first-child {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 1em;
+}
