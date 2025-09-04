@@ -264,6 +264,33 @@ fn processKeypress(e: *Editor) !void {
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//                              In-row operations
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Insert a character at current cursor position. Handle textwidth.
+fn insertChar(e: *Editor, c: u8) !void {
+    const V = &e.view;
+
+    // last row, insert a new row before inserting the character
+    if (V.cy == e.buffer.rows.items.len) {
+        try e.insertRow(e.buffer.rows.items.len, "");
+    }
+
+    // insert the character and move the cursor forward
+    try e.rowInsertChar(V.cy, V.cx, c);
+    V.cx += 1;
+}
+
+/// Insert character `c` in the row with index `ix`, at column `at`.
+fn rowInsertChar(e: *Editor, ix: usize, at: usize, c: u8) !void {
+    try e.rowAt(ix).chars.insert(e.buffer.alc, at, c);
+    try e.updateRow(ix);
+    e.buffer.dirty = true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //                              View operations
 //
 ///////////////////////////////////////////////////////////////////////////////
