@@ -161,3 +161,30 @@ pub const ReadCursorPos = CSI ++ "6n";
 
 // CSI sequence to clear the screen.
 pub const ClearScreen = CSI ++ "2J" ++ CSI ++ "H";
+
+/// Background color
+pub const BgDefault = CSI ++ "40m";
+
+/// Foreground color
+pub const FgDefault = CSI ++ "39m";
+
+/// Hide the terminal cursor
+pub const HideCursor = CSI ++ "?25l";
+
+/// Show the terminal cursor
+pub const ShowCursor = CSI ++ "?25h";
+
+/// Move cursor to position 1,1
+pub const CursorTopLeft = CSI ++ "H";
+
+/// Start reversing colors
+pub const ReverseColors = CSI ++ "7m";
+
+/// Reset colors to terminal default
+pub const ResetColors = CSI ++ "m";
+
+/// Clear the content of the line
+pub const ClearLine = CSI ++ "K";
+
+/// Color used for error messages
+pub const ErrorColor = CSI ++ "91m";
