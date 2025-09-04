@@ -26,6 +26,38 @@ pub const View = @import("View.zig");
 /// A dynamical string.
 pub const Chars = std.ArrayList(u8);
 
+/// ASCII codes of the keys, as they are read from stdin.
+pub const Key = enum(u8) {
+    ctrl_b = 2,
+    ctrl_c = 3,
+    ctrl_d = 4,
+    ctrl_f = 6,
+    ctrl_g = 7,
+    ctrl_h = 8,
+    tab = 9,
+    ctrl_j = 10,
+    ctrl_k = 11,
+    ctrl_l = 12,
+    enter = 13,
+    ctrl_q = 17,
+    ctrl_s = 19,
+    ctrl_t = 20,
+    ctrl_u = 21,
+    ctrl_z = 26,
+    esc = 27,
+    backspace = 127,
+    left = 128,
+    right = 129,
+    up = 130,
+    down = 131,
+    del = 132,
+    home = 133,
+    end = 134,
+    page_up = 135,
+    page_down = 136,
+    _,
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Functions
