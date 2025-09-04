@@ -1,0 +1,14 @@
+//! Collection of types used by the editor.
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//                              Editor types
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Dimensions of the terminal screen where the editor runs.
+pub const Screen = struct {
+    rows: usize = 0,
+    cols: usize = 0,
+};
+
