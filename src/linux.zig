@@ -6,9 +6,29 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+// Write bytes to stdout, return error if the requested amount of bytes
+// couldn't be written.
+pub fn write(buf: []const u8) !void {
+    if (try posix.write(STDOUT_FILENO, buf) != buf.len) {
+        return error.WriteIncomplete;
+    }
+}
+
 /// Read the window size into the `wsz` struct.
 pub fn winsize(wsz: *posix.winsize) usize {
     return linux.ioctl(STDOUT_FILENO, linux.T.IOCGWINSZ, @intFromPtr(wsz));
+}
+
+/// Keep reading from stdin until we get a valid character, ignoring
+/// .WouldBlock errors.
+pub fn readChars(buf: []u8) !usize {
+    while (true) {
+        const n = posix.read(STDIN_FILENO, buf) catch |err| switch (err) {
+            error.WouldBlock => continue,
+            else => return err,
+        };
+        if (n >= 1) return n;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
