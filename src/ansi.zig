@@ -12,6 +12,7 @@ pub fn getWindowSize() !t.Screen {
     var wsz: std.posix.winsize = undefined;
 
     if (linux.winsize(&wsz) == -1 or wsz.col == 0) {
+        if (builtin.is_test) return error.getWindowSizeFailed;
         screen = try getCursorPosition();
     } else {
         screen = t.Screen{
@@ -77,11 +78,13 @@ pub fn getCursorPosition() !t.Screen {
 ///////////////////////////////////////////////////////////////////////////////
 
 const std = @import("std");
+const builtin = @import("builtin");
+
 const linux = @import("linux.zig");
 const t = @import("types.zig");
 
 /// Control Sequence Introducer: ESC key, followed by '[' character
-pub const CSI = "\x1b["
+pub const CSI = "\x1b[";
 
 /// The ESC character
 pub const ESC = '\x1b';
@@ -93,3 +96,6 @@ pub const WinMaximize = CSI ++ "999C" ++ CSI ++ "999B";
 // Reports the cursor position (CPR) by transmitting ESC[n;mR, where n is the
 // row and m is the column
 pub const ReadCursorPos = CSI ++ "6n";
+
+// CSI sequence to clear the screen.
+pub const ClearScreen = CSI ++ "2J" ++ CSI ++ "H";
