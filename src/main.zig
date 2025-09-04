@@ -15,7 +15,14 @@ pub fn main() !void {
         .Debug => da.allocator(),
         else => std.heap.smp_allocator,
     };
-    _ = allocator;
+
+    var e = try t.Editor.init(allocator, try ansi.getWindowSize());
+    defer e.deinit();
+
+    var args = std.process.args();
+    _ = args.next(); // ignore first arg
+
+    try e.startUp(args.next()); // possible file to open
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -40,6 +47,8 @@ fn crashed(msg: []const u8, trace: ?usize) noreturn {
 const std = @import("std");
 const builtin = @import("builtin");
 
+const t = @import("types.zig");
+const ansi = @import("ansi.zig");
 const linux = @import("linux.zig");
 
 var orig_termios: std.os.linux.termios = undefined;
