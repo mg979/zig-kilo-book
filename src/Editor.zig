@@ -144,6 +144,13 @@ fn insertRow(e: *Editor, ix: usize, line: []const u8) !void {
     B.dirty = true;
 }
 
+/// Delete a row and deinitialize it.
+fn deleteRow(e: *Editor, ix: usize) void {
+    var row = e.buffer.rows.orderedRemove(ix);
+    row.deinit(e.buffer.alc);
+    e.buffer.dirty = true;
+}
+
 /// Update row.render, that is the visual representation of the row.
 /// Performs a syntax update at the end.
 fn updateRow(e: *Editor, ix: usize) !void {
@@ -282,9 +289,52 @@ fn insertChar(e: *Editor, c: u8) !void {
     V.cx += 1;
 }
 
+/// Delete a character before cursor position (backspace).
+fn deleteChar(e: *Editor) !void {
+    const V = &e.view;
+    const B = &e.buffer;
+
+    // past the end of the file
+    if (V.cy == B.rows.items.len) {
+        e.moveCursorWithKey(.left);
+    }
+
+    // start of file
+    if (V.cx == 0 and V.cy == 0) {
+        return;
+    }
+
+    // delete character in current line
+    if (V.cx > 0) {
+        try e.rowDelChar(V.cy, V.cx - 1);
+        V.cx -= 1;
+    }
+    // join with previous line
+    else {
+        V.cx = B.rows.items[V.cy - 1].clen();
+        try e.rowInsertString(V.cy - 1, V.cx, e.currentRow().chars.items);
+        e.deleteRow(V.cy);
+        V.cy -= 1;
+    }
+}
+
 /// Insert character `c` in the row with index `ix`, at column `at`.
 fn rowInsertChar(e: *Editor, ix: usize, at: usize, c: u8) !void {
     try e.rowAt(ix).chars.insert(e.buffer.alc, at, c);
+    try e.updateRow(ix);
+    e.buffer.dirty = true;
+}
+
+/// Insert a string at position `at`, in the row at index `ix`.
+fn rowInsertString(e: *Editor, ix: usize, at: usize, chars: []const u8) !void {
+    try e.rowAt(ix).chars.insertSlice(e.buffer.alc, at, chars);
+    try e.updateRow(ix);
+    e.buffer.dirty = true;
+}
+
+/// Delete a character in the row with index `ix`, at column `at`.
+fn rowDelChar(e: *Editor, ix: usize, at: usize) !void {
+    _ = e.rowAt(ix).chars.orderedRemove(at);
     try e.updateRow(ix);
     e.buffer.dirty = true;
 }
