@@ -1,0 +1,56 @@
+//! A Row contains 3 arrays, one for the actual characters, one for how it is
+//! rendered on the screen, and one with the highlight of each element of the
+//! rendered array.
+
+/// The ArrayList with the actual row characters
+chars: t.Chars,
+
+/// Array with the visual representation of the row
+render: []u8,
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//                              Init/deinit
+//
+///////////////////////////////////////////////////////////////////////////////
+
+pub fn init(allocator: std.mem.Allocator) !Row {
+    return Row{
+        .chars = try .initCapacity(allocator, initial_row_size),
+        .render = &.{},
+    };
+}
+
+pub fn deinit(row: *Row, allocator: std.mem.Allocator) void {
+    row.chars.deinit(allocator);
+    allocator.free(row.render);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//                              Methods
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Length of the real row.
+pub fn clen(row: *Row) usize {
+    return row.chars.items.len;
+}
+
+/// Length of the rendered row.
+pub fn rlen(row: *Row) usize {
+    return row.render.len;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//                              Constants, variables
+//
+///////////////////////////////////////////////////////////////////////////////
+
+const Row = @This();
+
+const std = @import("std");
+const t = @import("types.zig");
+
+const initial_row_size = 80;
