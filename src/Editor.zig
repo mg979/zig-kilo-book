@@ -341,6 +341,81 @@ fn rowDelChar(e: *Editor, ix: usize, at: usize) !void {
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//                              Insert lines
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Insert a new line at cursor position. Will carry to the next line
+/// everything that is after the cursor.
+fn insertNewLine(e: *Editor) !void {
+    const V = &e.view;
+
+    // make sure the beginning of the line is visible
+    V.coloff = 0;
+
+    // at first column, just insert an empty line above the cursor
+    if (V.cx == 0) {
+        try e.insertRow(V.cy, "");
+        V.cy += 1;
+        return;
+    }
+
+    // leading whitespace removed from characters after cursor
+    var skipw: usize = 0;
+
+    // extra characters for indent
+    var ind: usize = 0;
+
+    var oldrow = e.currentRow().chars.items;
+
+    // any whitespace before the text that is going into the new row
+    if (V.cx < oldrow.len) {
+        skipw = str.leadingWhitespaces(oldrow[V.cx..]);
+    }
+
+    if (opt.autoindent) {
+        ind = str.leadingWhitespaces(oldrow);
+
+        // reduce indent if current column is within it
+        if (V.cx < ind) {
+            ind = V.cx;
+        }
+    }
+
+    // will insert a row with the characters to the right of the cursor
+    // skipping whitespace after the cursor
+    try e.insertRow(V.cy + 1, oldrow[V.cx + skipw ..]);
+
+    // proceed to the new row
+    V.cy += 1;
+
+    if (ind > 0) {
+        // reassign pointer, invalidated by row insertion
+        oldrow = e.rowAt(V.cy - 1).chars.items;
+
+        // in new row, shift the old content forward, to make room for indent
+        const newrow = try e.currentRow().chars.addManyAt(e.alc, 0, ind);
+
+        // Copy the indent from the previous row.
+        for (0..ind) |i| {
+            newrow[i] = oldrow[i];
+        }
+    }
+
+    // delete from the row above the content that we moved to the next row
+    e.rowAt(V.cy - 1).chars.shrinkAndFree(e.alc, V.cx);
+
+    // row operations have been concluded, update rows
+    try e.updateRow(V.cy - 1);
+    try e.updateRow(V.cy);
+
+    // set cursor position at the start of the new line
+    V.cx = ind;
+    V.cwant = ind;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //                              View operations
 //
 ///////////////////////////////////////////////////////////////////////////////

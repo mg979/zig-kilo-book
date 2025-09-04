@@ -7,5 +7,8 @@ pub var tabstop: u8 = 8;
 /// Minimal number of screen lines to keep above and below the cursor
 pub var scroll_off: u8 = 2;
 
+/// Copy indent from current line when starting a new line
+pub var autoindent = true;
+
 pub const version_str = "0.1";
 pub const quit_times = 3;
