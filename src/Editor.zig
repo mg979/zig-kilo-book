@@ -96,6 +96,27 @@ fn openFile(e: *Editor, path: []const u8) !void {
         error.FileNotFound => {}, // new unsaved file
         else => return err,
     }
+
+    B.dirty = false;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//                              Row operations
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Insert a row at index `ix` with content `line`, then update it.
+fn insertRow(e: *Editor, ix: usize, line: []const u8) !void {
+    const B = &e.buffer;
+
+    var row = try t.Row.init(B.alc);
+    try row.chars.appendSlice(B.alc, line);
+
+    try B.rows.insert(B.alc, ix, row);
+
+    try e.updateRow(ix);
+    B.dirty = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
