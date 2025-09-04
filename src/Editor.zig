@@ -119,6 +119,33 @@ fn insertRow(e: *Editor, ix: usize, line: []const u8) !void {
     B.dirty = true;
 }
 
+/// Update row.render, that is the visual representation of the row.
+/// Performs a syntax update at the end.
+fn updateRow(e: *Editor, ix: usize) !void {
+    const row = e.rowAt(ix);
+
+    // get the length of the rendered row and reallocate
+    const rlen = row.cxToRx(row.chars.items.len);
+    row.render = try e.alc.realloc(row.render, rlen);
+
+    var idx: usize = 0;
+    var i: usize = 0;
+
+    while (i < row.chars.items.len) : (i += 1) {
+        if (row.chars.items[i] == '\t') {
+            row.render[idx] = ' ';
+            idx += 1;
+            while (idx % opt.tabstop != 0) : (idx += 1) {
+                row.render[idx] = ' ';
+            }
+        }
+        else {
+            row.render[idx] = row.chars.items[i];
+            idx += 1;
+        }
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Keys processing
@@ -162,6 +189,16 @@ fn updateString(e: *Editor, old: ?[]u8, path: []const u8) ![]u8 {
     return try e.alc.dupe(u8, path);
 }
 
+/// Get the row pointer at index `ix`.
+fn rowAt(e: *Editor, ix: usize) *t.Row {
+    return &e.buffer.rows.items[ix];
+}
+
+/// Get the row pointer at cursor position.
+fn currentRow(e: *Editor) *t.Row {
+    return &e.buffer.rows.items[e.view.cy];
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Constants, variables
@@ -174,3 +211,4 @@ const std = @import("std");
 
 const t = @import("types.zig");
 const ansi = @import("ansi.zig");
+const opt = @import("option.zig");

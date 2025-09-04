@@ -42,6 +42,18 @@ pub fn rlen(row: *Row) usize {
     return row.render.len;
 }
 
+/// Calculate the position of a real column in the rendered row.
+pub fn cxToRx(row: *Row, cx: usize) usize {
+    var rx: usize = 0;
+    for (0..cx) |i| {
+        if (row.chars.items[i] == '\t') {
+            rx += (opt.tabstop - 1) - (rx % opt.tabstop);
+        }
+        rx += 1;
+    }
+    return rx;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Constants, variables
@@ -51,6 +63,8 @@ pub fn rlen(row: *Row) usize {
 const Row = @This();
 
 const std = @import("std");
+
 const t = @import("types.zig");
+const opt = @import("option.zig");
 
 const initial_row_size = 80;
