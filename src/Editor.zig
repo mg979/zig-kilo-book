@@ -17,6 +17,9 @@ view: t.View,
 /// Becomes true when the main loop should stop, causing the editor to quit
 should_quit: bool,
 
+/// String that is printed on the terminal at every screen redraw
+surface: t.Chars,
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Init/deinit
@@ -25,8 +28,11 @@ should_quit: bool,
 
 /// Return the initialized editor instance.
 pub fn init(allocator: mem.Allocator, screen: t.Screen) !Editor {
+    // multiply * 10, because each cell could contain escape sequences
+    const surface_capacity = screen.rows * screen.cols * 10;
     return .{
         .alc = allocator,
+        .surface = try t.Chars.initCapacity(allocator, surface_capacity),
         .screen = .{
             .rows = screen.rows - 2, // make room for statusline/message area
             .cols = screen.cols,
@@ -40,6 +46,7 @@ pub fn init(allocator: mem.Allocator, screen: t.Screen) !Editor {
 /// Deinitialize the editor.
 pub fn deinit(e: *Editor) void {
     e.buffer.deinit();
+    e.surface.deinit(e.alc);
 }
 
 /// Start up the editor: open the path in args if valid, start the event loop.
@@ -197,6 +204,14 @@ fn rowAt(e: *Editor, ix: usize) *t.Row {
 /// Get the row pointer at cursor position.
 fn currentRow(e: *Editor) *t.Row {
     return &e.buffer.rows.items[e.view.cy];
+}
+
+/// Append either a slice or a character to the editor surface.
+fn toSurface(e: *Editor, value: anytype) !void {
+    switch (@typeInfo(@TypeOf(value))) {
+        .pointer => try e.surface.appendSlice(e.alc, value),
+        else => try e.surface.append(e.alc, value),
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
