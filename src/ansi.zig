@@ -6,6 +6,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+/// Clear the screen.
+pub fn clearScreen() !void {
+    try linux.write(ClearScreen);
+}
+
 /// Get the window size.
 pub fn getWindowSize() !t.Screen {
     var screen: t.Screen = undefined;
@@ -71,6 +76,61 @@ pub fn getCursorPosition() !t.Screen {
     return screen;
 }
 
+/// Read a character from stdin. Wait until at least one character is
+/// available.
+pub fn readKey() !t.Key {
+    // we read a sequence of characters in a buffer
+    var seq: [4]u8 = undefined;
+    const nread = try linux.readChars(&seq);
+
+    // if the first character is ESC, it could be part of an escape sequence
+    // in this case, nread will be > 2, that means that more than two
+    // characters have been read into the buffer, and it's an escape sequence
+    // for sure, if we can't recognize this sequence we return ESC anyway
+
+    const k: t.Key = @enumFromInt(seq[0]);
+
+    if (k == .esc and nread > 2) {
+        if (seq[1] == '[') {
+            if (nread > 3 and asc.isDigit(seq[2])) {
+                if (seq[3] == '~') {
+                    switch (seq[2]) {
+                        '1' => return .home,
+                        '3' => return .del,
+                        '4' => return .end,
+                        '5' => return .page_up,
+                        '6' => return .page_down,
+                        '7' => return .home,
+                        '8' => return .end,
+                        else => {},
+                    }
+                }
+            }
+            switch (seq[2]) {
+                'A' => return .up,
+                'B' => return .down,
+                'C' => return .right,
+                'D' => return .left,
+                'H' => return .home,
+                'F' => return .end,
+                else => {},
+            }
+        }
+        else if (seq[1] == 'O') {
+            switch (seq[2]) {
+                'H' => return .home,
+                'F' => return .end,
+                else => {},
+            }
+        }
+        return .esc;
+    }
+    else if (nread > 1) {
+        return .esc;
+    }
+    return k;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Constants, variables
@@ -79,6 +139,8 @@ pub fn getCursorPosition() !t.Screen {
 
 const std = @import("std");
 const builtin = @import("builtin");
+
+const asc = std.ascii;
 
 const linux = @import("linux.zig");
 const t = @import("types.zig");
