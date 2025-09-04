@@ -54,6 +54,23 @@ pub fn cxToRx(row: *Row, cx: usize) usize {
     return rx;
 }
 
+/// Calculate the position of a rendered column in the real row.
+pub fn rxToCx(row: *Row, rx: usize) usize {
+    var cur_rx: usize = 0;
+    var cx: usize = 0;
+    while (cx < row.chars.items.len) : (cx += 1) {
+        if (row.chars.items[cx] == '\t') {
+            cur_rx += (opt.tabstop - 1) - (cur_rx % opt.tabstop);
+        }
+        cur_rx += 1;
+
+        if (cur_rx > rx) {
+            return cx;
+        }
+    }
+    return cx;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Constants, variables
