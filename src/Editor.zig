@@ -54,8 +54,39 @@ pub fn startUp(e: *Editor, path: ?[]const u8) !void {
 
     while (e.should_quit == false) {
         // refresh the screen
-        // process keypresses
+        try e.processKeypress();
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//                              Keys processing
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Process a keypress: will wait indefinitely for readKey, which loops until
+/// a key is actually pressed.
+fn processKeypress(e: *Editor) !void {
+    const k = try ansi.readKey();
+
+    const static = struct {
+        var q: u8 = 3;
+    };
+
+    switch (k) {
+        .ctrl_q => {
+            if (static.q > 1) {
+                static.q -= 1;
+                return;
+            }
+            try ansi.clearScreen();
+            e.should_quit = true;
+        },
+        else => {},
+    }
+
+    // reset quit counter for any keypress that isn't Ctrl-Q
+    static.q = 3;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,3 +100,4 @@ const Editor = @This();
 const std = @import("std");
 
 const t = @import("types.zig");
+const ansi = @import("ansi.zig");
