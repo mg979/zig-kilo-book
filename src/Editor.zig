@@ -199,7 +199,7 @@ fn refreshScreen(e: *Editor) !void {
     try e.toSurface(ansi.CursorTopLeft);
 
     try e.drawRows();
-    // try e.drawStatusline();
+    try e.drawStatusline();
     // try e.drawMessageBar();
 
     const V = &e.view;
@@ -245,6 +245,62 @@ fn drawRows(e: *Editor) !void {
         try e.toSurface(ansi.ClearLine);
         try e.toSurface("\r\n"); // end the line
     }
+}
+
+/// Append the statusline to the surface.
+fn drawStatusline(e: *Editor) !void {
+    const V = &e.view;
+
+    try e.toSurface(ansi.ReverseColors);
+
+    var lbuf: [200]u8 = undefined;
+    var rbuf: [80]u8 = undefined;
+
+    // left side of the statusline
+    var ls = std.fmt.bufPrint(&lbuf, "{s} - {} lines{s}", .{
+        e.buffer.filename orelse "[No Name]",
+        e.buffer.rows.items.len,
+        if (e.buffer.dirty) " [modified]" else "",
+    }) catch "";
+
+    // right side of the statusline (leading space to guarantee separation)
+    var rs = std.fmt.bufPrint(&rbuf, " | {s} | col {}, ln {}/{} ", .{
+        e.buffer.syntax orelse "no ft",
+        V.cx + 1,
+        V.cy + 1,
+        e.buffer.rows.items.len,
+    }) catch "";
+
+    var room_left = e.screen.cols;
+
+    // prioritize left side
+    if (ls.len > room_left) {
+        ls = ls[0 .. room_left];
+    }
+    room_left -= ls.len;
+
+    try e.toSurface(ls);
+
+    if (room_left == 0) {
+        try e.finalizeStatusline();
+        return;
+    }
+
+    // add right side and spaces if there is room left for them
+    if (rs.len > room_left) {
+        rs = rs[0 .. room_left];
+    }
+    room_left -= rs.len;
+
+    try e.surface.appendNTimes(e.alc, ' ', room_left);
+    try e.toSurface(rs);
+    try e.finalizeStatusline();
+}
+
+/// Reset colors and append new line after statusline
+fn finalizeStatusline(e: *Editor) !void {
+    try e.toSurface(ansi.ResetColors);
+    try e.toSurface("\r\n");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
