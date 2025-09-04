@@ -215,6 +215,38 @@ fn refreshScreen(e: *Editor) !void {
     try linux.write(e.surface.items);
 }
 
+/// Append rows to be drawn to the surface. Handles escape sequences for syntax
+/// highlighting.
+fn drawRows(e: *Editor) !void {
+    const V = &e.view;
+    const rows = e.buffer.rows.items;
+
+    for (0 .. e.screen.rows) |y| {
+        const ix: usize = y + V.rowoff;
+
+        // past buffer content
+        if (ix >= rows.len) {
+            try e.toSurface('~');
+        }
+        // within buffer content
+        else {
+            // length of the rendered line
+            const rowlen = rows[ix].render.len;
+
+            // actual length that should be drawn because visible
+            var len = if (V.coloff > rowlen) 0 else rowlen - V.coloff;
+            len = @min(len, e.screen.cols);
+
+            // draw the visible part of the row
+            if (len > 0) {
+                try e.toSurface(rows[ix].render[V.coloff .. V.coloff + len]);
+            }
+        }
+        try e.toSurface(ansi.ClearLine);
+        try e.toSurface("\r\n"); // end the line
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Helpers
