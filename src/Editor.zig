@@ -213,10 +213,12 @@ fn processKeypress(e: *Editor) !void {
                 V.cy = V.rowoff + e.screen.rows - 1;
                 V.cy = @min(V.cy + leap, B.rows.items.len);
             }
+            e.doCwant(.restore);
         },
 
         .home => {
             V.cx = 0;
+            e.doCwant(.set);
         },
 
         .end => {
@@ -224,14 +226,17 @@ fn processKeypress(e: *Editor) !void {
             if (V.cy < B.rows.items.len) {
                 V.cx = B.rows.items[V.cy].clen();
             }
+            e.doCwant(.maxcol);
         },
 
         .left, .right => {
             e.moveCursorWithKey(k);
+            e.doCwant(.set);
         },
 
         .up, .down => {
             e.moveCursorWithKey(k);
+            e.doCwant(.restore);
         },
 
         else => {},
@@ -284,6 +289,46 @@ fn moveCursorWithKey(e: *Editor, key: t.Key) void {
             }
         },
         else => {},
+    }
+}
+
+/// Handle wanted column. `want` can be:
+/// .set: set e.view.cwant to a new value
+/// .maxcol: set to maxUsize, which means 'always the last column'
+/// .restore: set current column to cwant, or to the last column if too big
+fn doCwant(e: *Editor, want: t.Cwant) void {
+    const V = &e.view;
+    const numrows = e.buffer.rows.items.len;
+
+    switch (want) {
+        .set => {
+            V.cwant = if (V.cy < numrows) e.currentRow().cxToRx(V.cx) else 0;
+        },
+        .maxcol => {
+            V.cwant = maxUsize;
+        },
+        .restore => {
+            if (V.cy == numrows) { // past end of file
+                V.cx = 0;
+            }
+            else if (V.cwant == maxUsize) { // wants end of line
+                V.cx = e.currentRow().clen();
+            }
+            else {
+                const row = e.currentRow();
+                const rowlen = row.clen();
+                if (rowlen == 0) {
+                    V.cx = 0;
+                }
+                else {
+                    // cwant is an index of the rendered column, must convert
+                    V.cx = row.rxToCx(V.cwant);
+                    if (V.cx > rowlen) {
+                        V.cx = rowlen;
+                    }
+                }
+            }
+        },
     }
 }
 
@@ -513,3 +558,4 @@ const time = std.time.timestamp;
 const time_ms = std.time.milliTimestamp;
 
 const initial_msg_size = 80;
+const maxUsize = std.math.maxInt(usize);

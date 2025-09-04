@@ -58,6 +58,16 @@ pub const Key = enum(u8) {
     _,
 };
 
+/// Controls handling of the wanted column.
+pub const Cwant = enum(u8) {
+    /// To set cwant to a new value
+    set,
+    /// To restore current cwant, or to the last column if too big
+    restore,
+    /// To set cwant to maxUsize, which means 'always the last column'
+    maxcol,
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Functions
