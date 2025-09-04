@@ -1,0 +1,3 @@
+#!/bin/sh
+
+~/kilo-zig/zig-out/bin/kilo "$@" 2>err.txt

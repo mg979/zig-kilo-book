@@ -57,6 +57,19 @@ pub fn startUp(e: *Editor, path: ?[]const u8) !void {
     }
 }
 
+/// Read all lines from file.
+fn readLines(e: *Editor, file: std.fs.File) !void {
+    _ = e;
+    var buf: [1024]u8 = undefined;
+    var reader = file.reader(&buf);
+
+    while (reader.interface.takeDelimiterExclusive('\n')) |line| {
+        // we print the line to stderr, to see if it works
+        std.debug.print("{s}\n", .{line});
+    }
+    else |err| if (err != error.EndOfStream) return err;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              File operations
