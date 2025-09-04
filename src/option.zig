@@ -4,5 +4,8 @@
 /// Number of spaces a tab character accounts for
 pub var tabstop: u8 = 8;
 
+/// Minimal number of screen lines to keep above and below the cursor
+pub var scroll_off: u8 = 2;
+
 pub const version_str = "0.1";
 pub const quit_times = 3;

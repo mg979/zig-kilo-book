@@ -332,6 +332,58 @@ fn doCwant(e: *Editor, want: t.Cwant) void {
     }
 }
 
+/// Scroll the view, respecting scroll_off.
+fn scroll(e: *Editor) void {
+    const V = &e.view;
+    const numrows = e.buffer.rows.items.len;
+
+    //////////////////////////////////////////
+    //          scrolloff option
+    //////////////////////////////////////////
+
+    if (opt.scroll_off > 0 and numrows > e.screen.rows) {
+        while (V.rowoff + e.screen.rows < numrows
+               and V.cy + opt.scroll_off >= e.screen.rows + V.rowoff)
+        {
+            V.rowoff += 1;
+        }
+        while (V.rowoff > 0 and V.rowoff + opt.scroll_off > V.cy) {
+            V.rowoff -= 1;
+        }
+    }
+
+    //////////////////////////////////////////
+    //          update rendered column
+    //////////////////////////////////////////
+
+    V.rx = 0;
+
+    if (V.cy < numrows) {
+        V.rx = e.currentRow().cxToRx(V.cx);
+    }
+
+    //////////////////////////////////////////
+    //      update rowoff and coloff
+    //////////////////////////////////////////
+
+    // cursor has moved above the visible window
+    if (V.cy < V.rowoff) {
+        V.rowoff = V.cy;
+    }
+    // cursor has moved below the visible window
+    if (V.cy >= V.rowoff + e.screen.rows) {
+        V.rowoff = V.cy - e.screen.rows + 1;
+    }
+    // cursor has moved beyond the left edge of the window
+    if (V.rx < V.coloff) {
+        V.coloff = V.rx;
+    }
+    // cursor has moved beyond the right edge of the window
+    if (V.rx >= V.coloff + e.screen.cols) {
+        V.coloff = V.rx - e.screen.cols + 1;
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Screen update
@@ -340,6 +392,8 @@ fn doCwant(e: *Editor, want: t.Cwant) void {
 
 /// Full refresh of the screen.
 fn refreshScreen(e: *Editor) !void {
+    e.scroll();
+
     e.surface.clearRetainingCapacity();
 
     try e.toSurface(ansi.BgDefault);
