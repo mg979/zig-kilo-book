@@ -216,6 +216,16 @@ fn processKeypress(e: *Editor) !void {
             e.doCwant(.restore);
         },
 
+        .backspace, .ctrl_h, .del => {
+            if (k == .del) {
+                e.moveCursorWithKey(.right);
+            }
+            try e.deleteChar();
+            e.doCwant(.set);
+        },
+
+        .enter => try e.insertNewLine(),
+
         .home => {
             V.cx = 0;
             e.doCwant(.set);
@@ -239,7 +249,13 @@ fn processKeypress(e: *Editor) !void {
             e.doCwant(.restore);
         },
 
-        else => {},
+        else => {
+            const c = @intFromEnum(k);
+            if (k == .tab or asc.isPrint(c)) {
+                try e.insertChar(c);
+                e.doCwant(.set);
+            }
+        },
     }
 
     // reset quit counter for any keypress that isn't Ctrl-Q
@@ -606,6 +622,8 @@ const linux = @import("linux.zig");
 const message = @import("message.zig");
 
 const mem = std.mem;
+const asc = std.ascii;
+
 const expect = std.testing.expect;
 
 const time = std.time.timestamp;
