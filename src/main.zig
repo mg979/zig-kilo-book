@@ -13,6 +13,15 @@ pub fn main() !void {
         else => std.heap.smp_allocator,
     };
     _ = allocator;
+
+    var buf: [1]u8 = undefined;
+    while (try readChar(&buf) == 1 and buf[0] != 'q') {}
+}
+
+// Read from stdin into `buf`, return the number of read characters
+fn readChar(buf: []u8) !usize {
+    const stdin = std.posix.STDIN_FILENO;
+    return try std.posix.read(stdin, buf);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
