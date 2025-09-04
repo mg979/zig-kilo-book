@@ -59,13 +59,16 @@ pub fn startUp(e: *Editor, path: ?[]const u8) !void {
 
 /// Read all lines from file.
 fn readLines(e: *Editor, file: std.fs.File) !void {
-    _ = e;
     var buf: [1024]u8 = undefined;
     var reader = file.reader(&buf);
 
-    while (reader.interface.takeDelimiterExclusive('\n')) |line| {
-        // we print the line to stderr, to see if it works
-        std.debug.print("{s}\n", .{line});
+    var line_writer = std.Io.Writer.Allocating.init(e.alc);
+    defer line_writer.deinit();
+
+    while (reader.interface.streamDelimiter(&line_writer.writer, '\n')) |_| {
+        try e.insertRow(e.buffer.rows.items.len, line_writer.written());
+        line_writer.clearRetainingCapacity();
+        reader.interface.toss(1); // skip the newline
     }
     else |err| if (err != error.EndOfStream) return err;
 }
