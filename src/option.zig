@@ -5,3 +5,4 @@
 pub var tabstop: u8 = 8;
 
 pub const version_str = "0.1";
+pub const quit_times = 3;

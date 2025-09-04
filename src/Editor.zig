@@ -183,12 +183,14 @@ fn processKeypress(e: *Editor) !void {
     const k = try ansi.readKey();
 
     const static = struct {
-        var q: u8 = 3;
+        var q: u8 = opt.quit_times;
     };
+
+    const B = &e.buffer;
 
     switch (k) {
         .ctrl_q => {
-            if (static.q > 1) {
+            if (B.dirty and static.q > 0) {
                 static.q -= 1;
                 return;
             }
@@ -199,7 +201,7 @@ fn processKeypress(e: *Editor) !void {
     }
 
     // reset quit counter for any keypress that isn't Ctrl-Q
-    static.q = 3;
+    static.q = opt.quit_times;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
