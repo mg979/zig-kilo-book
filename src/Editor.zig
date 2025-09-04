@@ -45,8 +45,7 @@ pub fn deinit(e: *Editor) void {
 /// Start up the editor: open the path in args if valid, start the event loop.
 pub fn startUp(e: *Editor, path: ?[]const u8) !void {
     if (path) |name| {
-        _ = name;
-        // we open the file
+        try e.openFile(name);
     }
     else {
         // we generate the welcome message
@@ -55,6 +54,31 @@ pub fn startUp(e: *Editor, path: ?[]const u8) !void {
     while (e.should_quit == false) {
         // refresh the screen
         try e.processKeypress();
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//                              File operations
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Open a file with `path`.
+fn openFile(e: *Editor, path: []const u8) !void {
+    var B = &e.buffer;
+
+    // store the filename into the buffer
+    B.filename = try e.updateString(B.filename, path);
+
+    // read lines if the file could be opened
+    const file = std.fs.cwd().openFile(path, .{ .mode = .read_only });
+    if (file) |f| {
+        defer f.close();
+        try e.readLines(f);
+    }
+    else |err| switch (err) {
+        error.FileNotFound => {}, // new unsaved file
+        else => return err,
     }
 }
 
@@ -87,6 +111,18 @@ fn processKeypress(e: *Editor) !void {
 
     // reset quit counter for any keypress that isn't Ctrl-Q
     static.q = 3;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//                              Helpers
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Update the string, freeing the old one and allocating from `path`.
+fn updateString(e: *Editor, old: ?[]u8, path: []const u8) ![]u8 {
+    t.freeOptional(e.alc, old);
+    return try e.alc.dupe(u8, path);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
