@@ -187,6 +187,7 @@ fn processKeypress(e: *Editor) !void {
     };
 
     const B = &e.buffer;
+    const V = &e.view;
 
     switch (k) {
         .ctrl_q => {
@@ -197,6 +198,42 @@ fn processKeypress(e: *Editor) !void {
             try ansi.clearScreen();
             e.should_quit = true;
         },
+
+        .ctrl_d, .ctrl_u, .page_up, .page_down => {
+            // by how many rows we'll jump
+            const leap = e.screen.rows - 1;
+
+            // place the cursor at the top of the window, then jump
+            if (k == .ctrl_u or k == .page_up) {
+                V.cy = V.rowoff;
+                V.cy -= @min(V.cy, leap);
+            }
+            // place the cursor at the bottom of the window, then jump
+            else {
+                V.cy = V.rowoff + e.screen.rows - 1;
+                V.cy = @min(V.cy + leap, B.rows.items.len);
+            }
+        },
+
+        .home => {
+            V.cx = 0;
+        },
+
+        .end => {
+            // last row doesn't have characters!
+            if (V.cy < B.rows.items.len) {
+                V.cx = B.rows.items[V.cy].clen();
+            }
+        },
+
+        .left, .right => {
+            e.moveCursorWithKey(k);
+        },
+
+        .up, .down => {
+            e.moveCursorWithKey(k);
+        },
+
         else => {},
     }
 
