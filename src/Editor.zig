@@ -20,6 +20,12 @@ should_quit: bool,
 /// String that is printed on the terminal at every screen redraw
 surface: t.Chars,
 
+/// String to be printed in the message area (can be a prompt)
+status_msg: t.Chars,
+
+/// Controls the visibility of the status message
+status_msg_time: i64,
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Init/deinit
@@ -40,6 +46,8 @@ pub fn init(allocator: mem.Allocator, screen: t.Screen) !Editor {
         .buffer = try t.Buffer.init(allocator),
         .view = .{},
         .should_quit = false,
+        .status_msg = try t.Chars.initCapacity(allocator, initial_msg_size),
+        .status_msg_time = 0,
     };
 }
 
@@ -47,6 +55,7 @@ pub fn init(allocator: mem.Allocator, screen: t.Screen) !Editor {
 pub fn deinit(e: *Editor) void {
     e.buffer.deinit();
     e.surface.deinit(e.alc);
+    e.status_msg.deinit(e.alc);
 }
 
 /// Start up the editor: open the path in args if valid, start the event loop.
@@ -200,7 +209,7 @@ fn refreshScreen(e: *Editor) !void {
 
     try e.drawRows();
     try e.drawStatusline();
-    // try e.drawMessageBar();
+    try e.drawMessageBar();
 
     const V = &e.view;
 
@@ -303,6 +312,19 @@ fn finalizeStatusline(e: *Editor) !void {
     try e.toSurface("\r\n");
 }
 
+/// Append the message bar to the surface.
+fn drawMessageBar(e: *Editor) !void {
+    try e.toSurface(ansi.ClearLine);
+
+    var msglen = e.status_msg.items.len;
+    if (msglen > e.screen.cols) {
+        msglen = e.screen.cols;
+    }
+    if (msglen > 0 and time() - e.status_msg_time < 5) {
+        try e.toSurface(e.status_msg.items[0 .. msglen]);
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Helpers
@@ -368,3 +390,8 @@ const linux = @import("linux.zig");
 
 const mem = std.mem;
 const expect = std.testing.expect;
+
+const time = std.time.timestamp;
+const time_ms = std.time.milliTimestamp;
+
+const initial_msg_size = 80;
