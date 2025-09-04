@@ -5,6 +5,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 pub fn main() !void {
+    orig_termios = try linux.enableRawMode();
+    defer linux.disableRawMode(orig_termios);
+
     var da = std.heap.DebugAllocator(.{}){};
     defer _ = da.deinit();
 
@@ -33,6 +36,7 @@ fn readChar(buf: []u8) !usize {
 pub const panic = std.debug.FullPanic(crashed);
 
 fn crashed(msg: []const u8, trace: ?usize) noreturn {
+    linux.disableRawMode(orig_termios);
     std.debug.defaultPanic(msg, trace);
 }
 
@@ -44,3 +48,7 @@ fn crashed(msg: []const u8, trace: ?usize) noreturn {
 
 const std = @import("std");
 const builtin = @import("builtin");
+
+const linux = @import("linux.zig");
+
+var orig_termios: std.os.linux.termios = undefined;
