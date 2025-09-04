@@ -3,7 +3,7 @@
 //! the event loop.
 
 /// Allocator used by the editor instance
-alc: std.mem.Allocator,
+alc: mem.Allocator,
 
 /// The size of the terminal window where the editor runs
 screen: t.Screen,
@@ -24,7 +24,7 @@ should_quit: bool,
 ///////////////////////////////////////////////////////////////////////////////
 
 /// Return the initialized editor instance.
-pub fn init(allocator: std.mem.Allocator, screen: t.Screen) !Editor {
+pub fn init(allocator: mem.Allocator, screen: t.Screen) !Editor {
     return .{
         .alc = allocator,
         .screen = .{
@@ -201,6 +201,24 @@ fn currentRow(e: *Editor) *t.Row {
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//                              Tests
+//
+///////////////////////////////////////////////////////////////////////////////
+
+test "insert rows" {
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+
+    var e = try t.Editor.init(da.allocator(), .{ .rows = 50, .cols = 180 });
+    try e.openFile("src/main.zig");
+    defer e.deinit();
+
+    const row = e.rowAt(6).chars.items;
+    try expect(mem.eql(u8, "pub fn main() !void {", row));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //                              Constants, variables
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -212,3 +230,7 @@ const std = @import("std");
 const t = @import("types.zig");
 const ansi = @import("ansi.zig");
 const opt = @import("option.zig");
+const linux = @import("linux.zig");
+
+const mem = std.mem;
+const expect = std.testing.expect;
