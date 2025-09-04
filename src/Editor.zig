@@ -697,6 +697,7 @@ const ansi = @import("ansi.zig");
 const opt = @import("option.zig");
 const linux = @import("linux.zig");
 const message = @import("message.zig");
+const str = @import("string.zig");
 
 const mem = std.mem;
 const asc = std.ascii;
