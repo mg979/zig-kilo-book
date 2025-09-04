@@ -3,3 +3,5 @@
 
 /// Number of spaces a tab character accounts for
 pub var tabstop: u8 = 8;
+
+pub const version_str = "0.1";

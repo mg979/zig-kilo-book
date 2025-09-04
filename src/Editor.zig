@@ -26,6 +26,12 @@ status_msg: t.Chars,
 /// Controls the visibility of the status message
 status_msg_time: i64,
 
+/// String to be displayed when the editor is started without loading a file
+welcome_msg: t.Chars,
+
+/// Becomes false after the first screen redraw
+just_started: bool,
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Init/deinit
@@ -48,6 +54,8 @@ pub fn init(allocator: mem.Allocator, screen: t.Screen) !Editor {
         .should_quit = false,
         .status_msg = try t.Chars.initCapacity(allocator, initial_msg_size),
         .status_msg_time = 0,
+        .welcome_msg = try t.Chars.initCapacity(allocator, 0),
+        .just_started = true,
     };
 }
 
@@ -56,6 +64,7 @@ pub fn deinit(e: *Editor) void {
     e.buffer.deinit();
     e.surface.deinit(e.alc);
     e.status_msg.deinit(e.alc);
+    e.welcome_msg.deinit(e.alc);
 }
 
 /// Start up the editor: open the path in args if valid, start the event loop.
@@ -64,7 +73,7 @@ pub fn startUp(e: *Editor, path: ?[]const u8) !void {
         try e.openFile(name);
     }
     else {
-        // we generate the welcome message
+        try e.generateWelcome();
     }
 
     while (e.should_quit == false) {
@@ -221,6 +230,7 @@ fn refreshScreen(e: *Editor) !void {
 
     try e.toSurface(ansi.ShowCursor);
 
+    e.just_started = false;
     try linux.write(e.surface.items);
 }
 
@@ -235,7 +245,15 @@ fn drawRows(e: *Editor) !void {
 
         // past buffer content
         if (ix >= rows.len) {
-            try e.toSurface('~');
+            if (e.just_started
+                and e.buffer.filename == null
+                and e.buffer.rows.items.len == 0
+                and y == e.screen.rows / 3) {
+                try e.toSurface(e.welcome_msg.items);
+            }
+            else {
+                try e.toSurface('~');
+            }
         }
         // within buffer content
         else {
@@ -347,6 +365,20 @@ fn currentRow(e: *Editor) *t.Row {
     return &e.buffer.rows.items[e.view.cy];
 }
 
+/// Generate the welcome message.
+fn generateWelcome(e: *Editor) !void {
+    try e.welcome_msg.append(e.alc, '~');
+
+    var msg = message.status.get("welcome").?;
+    if (msg.len >= e.screen.cols) {
+        msg = msg[0 .. e.screen.cols - 1];
+    }
+    const padding: usize = (e.screen.cols - msg.len) / 2;
+
+    try e.welcome_msg.appendNTimes(e.alc, ' ', padding);
+    try e.welcome_msg.appendSlice(e.alc, msg);
+}
+
 /// Append either a slice or a character to the editor surface.
 fn toSurface(e: *Editor, value: anytype) !void {
     switch (@typeInfo(@TypeOf(value))) {
@@ -387,6 +419,7 @@ const t = @import("types.zig");
 const ansi = @import("ansi.zig");
 const opt = @import("option.zig");
 const linux = @import("linux.zig");
+const message = @import("message.zig");
 
 const mem = std.mem;
 const expect = std.testing.expect;
