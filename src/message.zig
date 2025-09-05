@@ -6,6 +6,8 @@ const opt = @import("option.zig");
 
 const status_messages = .{
     .{ "welcome", "Kilo editor -- version " ++ opt.version_str },
+    .{ "help", "HELP: Ctrl-S = save | Ctrl-Q = quit | Ctrl-F = find" },
+    .{ "unsaved", "WARNING!!! File has unsaved changes. Press Ctrl-Q {d} more times to quit." },
 };
 
 pub const status = std.StaticStringMap([]const u8).initComptime(status_messages);

@@ -69,6 +69,7 @@ pub fn deinit(e: *Editor) void {
 
 /// Start up the editor: open the path in args if valid, start the event loop.
 pub fn startUp(e: *Editor, path: ?[]const u8) !void {
+    try e.statusMessage(message.status.get("help").?, .{});
     if (path) |name| {
         try e.openFile(name);
     }
@@ -199,6 +200,7 @@ fn processKeypress(e: *Editor) !void {
     switch (k) {
         .ctrl_q => {
             if (B.dirty and static.q > 0) {
+                try e.statusMessage(message.status.get("unsaved").?, .{static.q});
                 static.q -= 1;
                 return;
             }
@@ -738,6 +740,29 @@ fn drawMessageBar(e: *Editor) !void {
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//                              Message area
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Set a status message, using regular highlight.
+pub fn statusMessage(e: *Editor, comptime format: []const u8, args: anytype) !void {
+    assert(format.len > 0);
+    e.status_msg.clearRetainingCapacity();
+    try e.status_msg.print(e.alc, format, args);
+    e.status_msg_time = time();
+}
+
+/// Print an error message, using error highlight.
+pub fn errorMessage(e: *Editor, comptime format: []const u8, args: anytype) !void {
+    assert(format.len > 0);
+    e.status_msg.clearRetainingCapacity();
+    const fmt = ansi.ErrorColor ++ format ++ ansi.ResetColors;
+    try e.status_msg.print(e.alc, fmt, args);
+    e.status_msg_time = time();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //                              Helpers
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -819,6 +844,7 @@ const mem = std.mem;
 const asc = std.ascii;
 
 const expect = std.testing.expect;
+const assert = std.debug.assert;
 
 const time = std.time.timestamp;
 const time_ms = std.time.milliTimestamp;
