@@ -287,6 +287,47 @@ fn insertChar(e: *Editor, c: u8) !void {
     // insert the character and move the cursor forward
     try e.rowInsertChar(V.cy, V.cx, c);
     V.cx += 1;
+
+    //////////////////////////////////////////
+    //              textwidth
+    //////////////////////////////////////////
+
+    const row = e.currentRow();
+    const rx = row.cxToRx(V.cx);
+
+    if (opt.textwidth.enabled and rx > opt.textwidth.len and str.isWord(c)) {
+        // will be 1 if a space before the wrapped word must be removed
+        var skipw: usize = 0;
+
+        // find the start of the current word
+        var start: usize = rx - 1;
+
+        while (start > 0) {
+            if (!str.isWord(row.render[start - 1])) {
+                // we want to remove a space before the wrapped word, but not
+                // other kinds of separators (not even a tab, just in case)
+                if (row.render[start - 1] == ' ') {
+                    skipw = 1;
+                }
+                break;
+            }
+            start -= 1;
+        }
+
+        // only wrap if the word doesn't start at the beginning
+        if (start > 0) {
+            const wlen = rx - start;
+
+            // move the cursor to the start of the word, also skipping a space
+            V.cx = row.rxToCx(start - skipw);
+
+            // new line insertion will carry over the word and delete the space
+            try e.insertNewLine();
+
+            // move forward the cursor to the end of the word
+            V.cx += wlen;
+        }
+    }
 }
 
 /// Delete a character before cursor position (backspace).

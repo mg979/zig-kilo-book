@@ -13,6 +13,14 @@ pub fn leadingWhitespaces(src: []u8) usize {
     return i;
 }
 
+/// Return true if `c` is a word character.
+pub fn isWord(c: u8) bool {
+    return switch (c) {
+        '0'...'9', 'a'...'z', 'A'...'Z', '_' => true,
+        else => false,
+    };
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Constants, variables
