@@ -11,9 +11,14 @@ const status_messages = .{
     .{ "bufwrite", "\"{s}\" {d} lines, {d} bytes written" },
 };
 
+const prompt_messages = .{
+    .{ "fname", "Enter filename, or ESC to cancel: " },
+};
+
 const error_messages = .{
     .{ "ioerr", "Can't save! I/O error: {s}" },
 };
 
 pub const status = std.StaticStringMap([]const u8).initComptime(status_messages);
+pub const prompt = std.StaticStringMap([]const u8).initComptime(prompt_messages);
 pub const errors = std.StaticStringMap([]const u8).initComptime(error_messages);
