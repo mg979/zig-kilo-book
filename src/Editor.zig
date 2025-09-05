@@ -793,6 +793,44 @@ fn drawMessageBar(e: *Editor) !void {
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+/// Start a prompt in the message area, return the user input.
+/// Prompt is terminated with either .esc or .enter keys.
+/// Prompt is also terminated by .backspace if there is no character left in
+/// the input.
+fn promptForInput(e: *Editor, prompt: []const u8) !t.Chars {
+    var al = try t.Chars.initCapacity(e.alc, 80);
+
+    while (true) {
+        try e.statusMessage("{s}{s}", .{ prompt, al.items });
+        try e.refreshScreen();
+
+        const k = try ansi.readKey();
+        const c = @intFromEnum(k);
+
+        switch (k) {
+            .ctrl_h, .backspace => {
+                if (al.items.len == 0) {
+                    break;
+                }
+                _ = al.pop();
+            },
+
+            .esc => {
+                al.clearRetainingCapacity();
+                break;
+            },
+
+            .enter => break,
+
+            else => if (k == .tab or asc.isPrint(c)) {
+                try al.append(e.alc, c);
+            },
+        }
+    }
+    e.clearStatusMessage();
+    return al;
+}
+
 /// Set a status message, using regular highlight.
 pub fn statusMessage(e: *Editor, comptime format: []const u8, args: anytype) !void {
     assert(format.len > 0);
@@ -852,6 +890,11 @@ fn toSurface(e: *Editor, value: anytype) !void {
         .pointer => try e.surface.appendSlice(e.alc, value),
         else => try e.surface.append(e.alc, value),
     }
+}
+
+/// Clear the message area. Can't fail because it won't reallocate.
+fn clearStatusMessage(e: *Editor) void {
+    e.status_msg.clearRetainingCapacity();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
