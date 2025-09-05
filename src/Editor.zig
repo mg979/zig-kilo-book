@@ -719,10 +719,23 @@ fn drawRows(e: *Editor) !void {
             var len = if (V.coloff > rowlen) 0 else rowlen - V.coloff;
             len = @min(len, e.screen.cols);
 
-            // draw the visible part of the row
-            if (len > 0) {
-                try e.toSurface(rows[ix].render[V.coloff .. V.coloff + len]);
+            // part of the line after coloff, and its highlight
+            const rline = if (len > 0) rows[ix].render[V.coloff..] else &.{};
+            const hl = if (len > 0) rows[ix].hl[V.coloff..] else &.{};
+
+            var current_color = t.Highlight.normal;
+
+            // loop characters of the rendered row
+            for (rline[0..len], 0..) |c, i| {
+                if (hl[i] != current_color) {
+                    const color = hl[i];
+                    current_color = color;
+                    try e.toSurface(t.HlGroup.attr(color));
+                }
+                try e.toSurface(c);
             }
+            // end of the line, reset highlight
+            try e.toSurface(ansi.ResetColors);
         }
         try e.toSurface(ansi.ClearLine);
         try e.toSurface("\r\n"); // end the line
