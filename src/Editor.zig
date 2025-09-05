@@ -111,6 +111,7 @@ fn openFile(e: *Editor, path: []const u8) !void {
 
     // store the filename into the buffer
     B.filename = try e.updateString(B.filename, path);
+    B.syntax = try e.selectSyntax();
 
     // read lines if the file could be opened
     const file = std.fs.cwd().openFile(path, .{ .mode = .read_only });
@@ -144,6 +145,8 @@ fn saveFile(e: *Editor) !void {
             return;
         }
     }
+
+    B.syntax = try e.selectSyntax();
 
     // determine number of bytes to write, make room for \n characters
     var fsize: usize = B.rows.items.len;
@@ -1156,6 +1159,41 @@ pub fn errorMessage(e: *Editor, comptime format: []const u8, args: anytype) !voi
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+/// Return the syntax name for the current file, or null.
+fn selectSyntax(e: *Editor) !?[]const u8 {
+    var B = &e.buffer;
+
+    // free the old syntax, if any
+    t.freeOptional(e.alc, B.syntax);
+    B.syntax = null;
+
+    // we might allow setting a syntax even without a filename, actually...
+    // but for now it's not possible
+    if (B.filename == null) {
+        return null;
+    }
+
+    const fileExt = str.getExtension(B.filename.?);
+
+    for (&syndefs.Syntaxes) |*syntax| {
+        if (fileExt) |extension| {
+            for (syntax.ft_ext) |ext| {
+                if (str.eql(ext, extension)) {
+                    B.syndef = syntax;
+                    return try e.alc.dupe(u8, syntax.ft_name);
+                }
+            }
+        }
+        for (syntax.ft_fntails) |name| {
+            if (str.isTail(B.filename.?, name)) {
+                B.syndef = syntax;
+                return try e.alc.dupe(u8, syntax.ft_name);
+            }
+        }
+    }
+    return null;
+}
+
 /// Update highlight for a row.
 fn updateHighlight(e: *Editor, ix: usize) !void {
     const row = e.rowAt(ix);
@@ -1380,6 +1418,7 @@ const opt = @import("option.zig");
 const linux = @import("linux.zig");
 const message = @import("message.zig");
 const str = @import("string.zig");
+const syndefs = @import("syndefs.zig");
 
 const mem = std.mem;
 const asc = std.ascii;
