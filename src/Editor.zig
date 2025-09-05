@@ -1259,9 +1259,51 @@ fn updateHighlight(e: *Editor, ix: usize) !void {
             i += 1;
             continue :toplevel;
         }
+
+        // ML comments
+        if (mlc != null and mlc.?.len > 0 and !in_string) {
+            const mc = mlc.?;
+
+            if (in_mlcomment) {
+                const len = mc[2].len;
+                row.hl[i] = t.Highlight.mlcomment;
+
+                if (i + len <= rowlen and str.eql(row.render[i .. i + len], mc[2])) { // END
+                    @memset(row.hl[i .. i + len], t.Highlight.mlcomment);
+                    i += len;
+                    in_mlcomment = false;
+                    prev_sep = true;
+                    continue :toplevel;
+                }
+                else {
+                    i += 1;
+                    continue :toplevel;
+                }
+            }
+            else {
+                const len = mc[0].len;
+
+                if (i + len <= rowlen and str.eql(row.render[i .. i + len], mc[0])) { // START
+                    @memset(row.hl[i .. i + len], t.Highlight.mlcomment);
+                    i += len;
+                    in_mlcomment = true;
+                    continue :toplevel;
+                }
+            }
+        }
         prev_sep = str.isSeparator(row.render[i]);
         i += 1;
     } // end :top-level
+
+    // If a multiline comment state has changed (either a comment started, or
+    // a previous one has been closed) we must update following the row, which
+    // will in turn update others, until all rows affected by the comment are
+    // updated.
+    const mlc_state_changed = row.ml_comment != in_mlcomment;
+    row.ml_comment = in_mlcomment;
+    if (mlc_state_changed and ix + 1 < e.buffer.rows.items.len) {
+        try e.updateHighlight(ix + 1);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
