@@ -20,6 +20,94 @@ pub const hlGroups: [n_hl]t.HlGroup = arr: {
         .italic = false,
         .underline = false,
     };
+    hlg[int(.comment)] = .{
+        .fg = FgColor.black_bright,
+        .bg = BgColor.default,
+        .reverse = false,
+        .bold = false,
+        .italic = false,
+        .underline = false,
+    };
+    hlg[int(.mlcomment)] = .{
+        .fg = FgColor.blue_bright,
+        .bg = BgColor.default,
+        .reverse = false,
+        .bold = false,
+        .italic = false,
+        .underline = false,
+    };
+    hlg[int(.number)] = .{
+        .fg = FgColor.white_bright,
+        .bg = BgColor.default,
+        .reverse = false,
+        .bold = false,
+        .italic = false,
+        .underline = false,
+    };
+    hlg[int(.string)] = .{
+        .fg = FgColor.green,
+        .bg = BgColor.default,
+        .reverse = false,
+        .bold = false,
+        .italic = false,
+        .underline = false,
+    };
+    hlg[int(.keyword)] = .{
+        .fg = FgColor.cyan,
+        .bg = BgColor.default,
+        .reverse = false,
+        .bold = false,
+        .italic = false,
+        .underline = false,
+    };
+    hlg[int(.types)] = .{
+        .fg = FgColor.cyan_bright,
+        .bg = BgColor.default,
+        .reverse = false,
+        .bold = false,
+        .italic = false,
+        .underline = false,
+    };
+    hlg[int(.builtin)] = .{
+        .fg = FgColor.magenta,
+        .bg = BgColor.default,
+        .reverse = false,
+        .bold = false,
+        .italic = false,
+        .underline = false,
+    };
+    hlg[int(.constant)] = .{
+        .fg = FgColor.yellow,
+        .bg = BgColor.default,
+        .reverse = false,
+        .bold = false,
+        .italic = false,
+        .underline = false,
+    };
+    hlg[int(.preproc)] = .{
+        .fg = FgColor.red_bright,
+        .bg = BgColor.default,
+        .reverse = false,
+        .bold = false,
+        .italic = false,
+        .underline = false,
+    };
+    hlg[int(.uppercase)] = .{
+        .fg = FgColor.yellow_bright,
+        .bg = BgColor.default,
+        .reverse = false,
+        .bold = false,
+        .italic = false,
+        .underline = false,
+    };
+    hlg[int(.escape)] = .{
+        .fg = FgColor.red,
+        .bg = BgColor.default,
+        .reverse = false,
+        .bold = false,
+        .italic = false,
+        .underline = false,
+    };
     hlg[int(.incsearch)] = .{
         .fg = FgColor.green,
         .bg = BgColor.default,

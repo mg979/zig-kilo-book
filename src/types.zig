@@ -126,6 +126,39 @@ pub const Highlight = enum(u8) {
     /// The normal highlight
     normal = 0,
 
+    /// Line comments highlight
+    comment,
+
+    /// Multiline comments highlight
+    mlcomment,
+
+    /// Numbers highlight
+    number,
+
+    /// String highlight
+    string,
+
+    /// Highlight for keywords of type 'keyword'
+    keyword,
+
+    /// Highlight for keywords of type 'types'
+    types,
+
+    /// Highlight for keywords of type 'builtin'
+    builtin,
+
+    /// Highlight for keywords of type 'constant'
+    constant,
+
+    /// Highlight for keywords of type 'preproc'
+    preproc,
+
+    /// Highlight for uppercase words
+    uppercase,
+
+    /// Highlight for escape sequences in strings
+    escape,
+
     /// Incremental search highlight
     incsearch,
 
