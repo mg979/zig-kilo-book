@@ -234,6 +234,7 @@ fn updateRow(e: *Editor, ix: usize) !void {
             idx += 1;
         }
     }
+    try e.updateHighlight(ix);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -856,6 +857,21 @@ pub fn errorMessage(e: *Editor, comptime format: []const u8, args: anytype) !voi
     const fmt = ansi.ErrorColor ++ format ++ ansi.ResetColors;
     try e.status_msg.print(e.alc, fmt, args);
     e.status_msg_time = time();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//                              Syntax highlighting
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Update highlight for a row.
+fn updateHighlight(e: *Editor, ix: usize) !void {
+    const row = e.rowAt(ix);
+
+    // reset the row highlight to normal
+    row.hl = try e.alc.realloc(row.hl, row.render.len);
+    @memset(row.hl, .normal);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
