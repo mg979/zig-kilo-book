@@ -232,6 +232,3 @@ pub const ResetColors = CSI ++ "m";
 
 /// Clear the content of the line
 pub const ClearLine = CSI ++ "K";
-
-/// Color used for error messages
-pub const ErrorColor = CSI ++ "91m";

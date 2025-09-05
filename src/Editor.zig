@@ -854,7 +854,7 @@ pub fn statusMessage(e: *Editor, comptime format: []const u8, args: anytype) !vo
 pub fn errorMessage(e: *Editor, comptime format: []const u8, args: anytype) !void {
     assert(format.len > 0);
     e.status_msg.clearRetainingCapacity();
-    const fmt = ansi.ErrorColor ++ format ++ ansi.ResetColors;
+    const fmt = comptime t.HlGroup.attr(.err) ++ format ++ ansi.ResetColors;
     try e.status_msg.print(e.alc, fmt, args);
     e.status_msg_time = time();
 }
