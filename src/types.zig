@@ -98,6 +98,25 @@ pub const Highlight = enum(u8) {
     err,
 };
 
+/// Attributes of a highlight group.
+pub const HlGroup = struct {
+    /// Foreground CSI color code
+    fg: u8,
+
+    /// Background CSI color code
+    bg: u8,
+
+    reverse: bool,
+    bold: bool,
+    italic: bool,
+    underline: bool,
+
+    /// Get the attribute of a HlGroup from the hlAttrs array.
+    pub fn attr(color: Highlight) []const u8 {
+        return hlAttrs[@intFromEnum(color)];
+    }
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Functions
@@ -118,3 +137,4 @@ pub fn freeOptional(allocator: std.mem.Allocator, sl: anytype) void {
 ///////////////////////////////////////////////////////////////////////////////
 
 const std = @import("std");
+const hlAttrs = @import("hlgroups.zig").hlAttrs;
