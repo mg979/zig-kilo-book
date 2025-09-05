@@ -23,6 +23,11 @@ pub const View = @import("View.zig");
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+/// Error set for functions requiring explicit error handling.
+pub const EditorError = error{
+    OutOfMemory,
+};
+
 /// Error set for both read and write operations.
 pub const IoError = std.fs.File.OpenError
                  || std.fs.File.WriteError
