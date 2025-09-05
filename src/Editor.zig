@@ -855,16 +855,19 @@ fn drawMessageBar(e: *Editor) !void {
 /// Prompt is also terminated by .backspace if there is no character left in
 /// the input.
 fn promptForInput(e: *Editor, prompt: []const u8, saved: t.View, cb: ?t.PromptCb) !t.Chars {
-    _ = cb;
-    _ = saved;
     var al = try t.Chars.initCapacity(e.alc, 80);
+
+    var k: t.Key = undefined;
+    var c: u8 = undefined;
+    var cb_args: t.PromptCbArgs = undefined;
 
     while (true) {
         try e.statusMessage("{s}{s}", .{ prompt, al.items });
         try e.refreshScreen();
 
-        const k = try ansi.readKey();
-        const c = @intFromEnum(k);
+        k = try ansi.readKey();
+        c = @intFromEnum(k);
+        cb_args = .{ .input = &al, .key = k, .saved = saved };
 
         switch (k) {
             .ctrl_h, .backspace => {
@@ -885,8 +888,11 @@ fn promptForInput(e: *Editor, prompt: []const u8, saved: t.View, cb: ?t.PromptCb
                 try al.append(e.alc, c);
             },
         }
+        if (cb) |callback| try callback(e, cb_args);
     }
     e.clearStatusMessage();
+    cb_args.final = true;
+    if (cb) |callback| try callback(e, cb_args);
     return al;
 }
 
