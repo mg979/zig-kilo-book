@@ -1336,6 +1336,133 @@ fn updateHighlight(e: *Editor, ix: usize) !void {
             }
         }
 
+        // numbers
+        if (flags.numbers and prev_sep) {
+            var prev_digit = false;
+            var is_float = false;
+            var has_exp = false;
+            var is_hex = false;
+            var is_bin = false;
+            var is_octal = false;
+            var NaN = false;
+
+            const begin = i;
+
+            // hex, binary, octal notations
+            if (i + 1 < rowlen) {
+                if (row.render[i] == '0') {
+                    switch (row.render[i + 1]) {
+                        'x', 'X' => if (flags.hex) {
+                            is_hex = true;
+                            i += 2;
+                        },
+                        'b', 'B' => if (flags.bin) {
+                            is_bin = true;
+                            i += 2;
+                        },
+                        'o', 'O' => if (flags.octal) {
+                            is_octal = true;
+                            i += 2;
+                        },
+                        else => {},
+                    }
+                }
+            }
+
+            // accept consecutive digits, or a dot followed by a number
+            digits: while (true) : (i += 1) {
+                if (i == rowlen) break :digits;
+
+                switch (row.render[i]) {
+                    '0'...'1' => prev_digit = true,
+
+                    // invalid for binary numbers
+                    '2'...'7' => {
+                        if (!is_bin) {
+                            prev_digit = true;
+                        }
+                        else {
+                            prev_digit = false;
+                            break :digits;
+                        }
+                    },
+
+                    // invalid for binary and octal numbers
+                    '8'...'9' => {
+                        if (!is_bin and !is_octal) {
+                            prev_digit = true;
+                        }
+                        else {
+                            prev_digit = false;
+                            break :digits;
+                        }
+                    },
+
+                    // underscores as delimiters in numeric literals
+                    '_' => {
+                        if (prev_digit and flags.uscn) {
+                            prev_digit = false;
+                        }
+                        else {
+                            break :digits;
+                        }
+                    },
+
+                    // could be an exponent, or a hex digit
+                    'e', 'E' => {
+                        if (is_float and !has_exp) {
+                            has_exp = true;
+                            prev_digit = false;
+                        }
+                        else if (is_hex) {
+                            prev_digit = true;
+                        }
+                        else {
+                            break :digits;
+                        }
+                    },
+
+                    // hex digits
+                    'a'...'d', 'f', 'A'...'D', 'F' => {
+                        if (is_hex) prev_digit = true else break :digits;
+                    },
+
+                    // floating point
+                    '.' => {
+                        prev_sep = true;
+                        prev_digit = false;
+                        if (!is_float and !is_hex and !is_bin) {
+                            is_float = true;
+                        }
+                        else {
+                            break :digits;
+                        }
+                    },
+
+                    else => break :digits,
+                }
+            }
+
+            // previous separator could be invalid if any character was
+            // processed
+            prev_sep = i == begin or str.isSeparator(row.render[i - 1]);
+
+            // no matter the type of number, last character should be a digit
+            if (!prev_digit) {
+                NaN = true;
+            }
+            // after our number comes something that isn't a separator
+            else if (i != rowlen and !str.isSeparator(row.render[i])) {
+                NaN = true;
+            }
+            if (!NaN) {
+                for (begin..i) |idx| {
+                    row.hl[idx] = t.Highlight.number;
+                }
+            }
+        }
+        if (i == rowlen) break :toplevel;
+
         prev_sep = str.isSeparator(row.render[i]);
         i += 1;
     } // end :top-level
