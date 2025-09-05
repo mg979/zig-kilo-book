@@ -133,8 +133,16 @@ fn saveFile(e: *Editor) !void {
     var B = &e.buffer;
 
     if (B.filename == null) {
-        // will prompt for a filename
-        return;
+        var al = try e.promptForInput(message.prompt.get("fname").?);
+        defer al.deinit(e.alc);
+
+        if (al.items.len > 0) {
+            B.filename = try e.updateString(B.filename, al.items);
+        }
+        else {
+            try e.statusMessage("Save aborted", .{});
+            return;
+        }
     }
 
     // determine number of bytes to write, make room for \n characters
@@ -256,6 +264,8 @@ fn processKeypress(e: *Editor) !void {
             try ansi.clearScreen();
             e.should_quit = true;
         },
+
+        .ctrl_s => try e.saveFile(),
 
         .ctrl_d, .ctrl_u, .page_up, .page_down => {
             // by how many rows we'll jump
