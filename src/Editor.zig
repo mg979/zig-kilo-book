@@ -1291,6 +1291,51 @@ fn updateHighlight(e: *Editor, ix: usize) !void {
                 }
             }
         }
+
+        // single-line comment
+        if (lc.len > 0 and !in_string and !in_mlcomment) {
+            for (lc) |ldr| {
+                if (i + ldr.len <= rowlen and str.eql(row.render[i .. i + ldr.len], ldr)) {
+                    @memset(row.hl[i..], t.Highlight.comment);
+                    break :toplevel;
+                }
+            }
+        }
+
+        if (flags.strings) {
+            if (in_string or in_char) {
+                if (escaped or row.render[i] == '\\') {
+                    escaped = !escaped;
+                    row.hl[i] = t.Highlight.escape;
+                }
+                else {
+                    row.hl[i] = if (in_char) t.Highlight.number else t.Highlight.string;
+                    if (row.render[i] == delimiter) {
+                        in_string = false;
+                        in_char = false;
+                    }
+                }
+                i += 1;
+                continue :toplevel;
+            }
+            else if (flags.dquotes and row.render[i] == '"'
+                     or flags.squotes and row.render[i] == '\''
+                     or flags.backticks and row.render[i] == '`') {
+                in_string = true;
+                delimiter = row.render[i];
+                row.hl[i] = t.Highlight.string;
+                i += 1;
+                continue :toplevel;
+            }
+            else if (flags.chars and row.render[i] == '\'') {
+                in_char = true;
+                delimiter = row.render[i];
+                row.hl[i] = t.Highlight.number;
+                i += 1;
+                continue :toplevel;
+            }
+        }
+
         prev_sep = str.isSeparator(row.render[i]);
         i += 1;
     } // end :top-level
