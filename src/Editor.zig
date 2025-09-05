@@ -1033,6 +1033,9 @@ const asc = std.ascii;
 const expect = std.testing.expect;
 const assert = std.debug.assert;
 
+const lastIndexOf = mem.lastIndexOf;
+const indexOf = mem.indexOf;
+
 const time = std.time.timestamp;
 const time_ms = std.time.milliTimestamp;
 

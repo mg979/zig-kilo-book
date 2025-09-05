@@ -12,6 +12,12 @@ pub const Screen = struct {
     cols: usize = 0,
 };
 
+/// A position in the buffer.
+pub const Pos = struct {
+    lnr: usize = 0,
+    col: usize = 0,
+};
+
 pub const Editor = @import("Editor.zig");
 pub const Buffer = @import("Buffer.zig");
 pub const Row = @import("Row.zig");
