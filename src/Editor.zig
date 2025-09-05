@@ -727,6 +727,56 @@ fn findForward(e: *Editor, query: []const u8, pos: *t.Pos) ?[]const u8 {
     return null;
 }
 
+/// Start a search backwards.
+fn findBackward(e: *Editor, query: []const u8, pos: *t.Pos) ?[]const u8 {
+    // first line, search up to col
+    const row = e.rowAt(pos.lnr);
+    const col = pos.col;
+    var rowchars = row.chars.items;
+    var i: usize = undefined;
+
+    if (lastIndexOf(u8, rowchars[0..col], query)) |m| {
+        return rowchars[m .. m + query.len];
+    }
+    else if (pos.lnr > 0) {
+        // previous lines, search full line
+        i = pos.lnr - 1;
+        while (true) : (i -= 1) {
+            rowchars = e.rowAt(i).chars.items;
+
+            if (lastIndexOf(u8, rowchars, query)) |m| {
+                pos.lnr = i;
+                return rowchars[m .. m + query.len];
+            }
+            if (i == 0) break;
+        }
+    }
+
+    if (!opt.wrapscan) {
+        return null;
+    }
+
+    i = e.buffer.rows.items.len - 1;
+    while (i > pos.lnr) : (i -= 1) {
+        rowchars = e.rowAt(i).chars.items;
+
+        if (lastIndexOf(u8, rowchars, query)) |m| {
+            pos.lnr = i;
+            return rowchars[m .. m + query.len];
+        }
+    }
+
+    // check again the starting line, this time in the part after the offset
+    rowchars = e.rowAt(pos.lnr).chars.items;
+
+    if (lastIndexOf(u8, rowchars[col..], query)) |m| {
+        // m is the index in the substring starting from `col`, therefore we
+        // must add `col` to get the real index in the row
+        return rowchars[m + col .. m + col + query.len];
+    }
+    return null;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              View operations
