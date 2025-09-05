@@ -126,6 +126,13 @@ fn openFile(e: *Editor, path: []const u8) !void {
     B.dirty = false;
 }
 
+/// Handle an error of type IoError by printing an error message, without
+/// quitting the editor.
+fn ioerr(e: *Editor, err: t.IoError) !void {
+    try e.errorMessage(message.errors.get("ioerr").?, .{@errorName(err)});
+    return;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Row operations
