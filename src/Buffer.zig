@@ -15,6 +15,9 @@ filename: ?[]u8,
 // Name of the syntax
 syntax: ?[]const u8,
 
+// Pointer to the syntax definition
+syndef: ?*const t.Syntax,
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Init/deinit
@@ -28,6 +31,7 @@ pub fn init(allocator: std.mem.Allocator) !Buffer {
         .dirty = false,
         .filename = null,
         .syntax = null,
+        .syndef = null,
     };
 }
 

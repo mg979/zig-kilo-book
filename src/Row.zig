@@ -11,6 +11,9 @@ render: []u8,
 /// Array with the highlight of the rendered row
 hl: []t.Highlight,
 
+/// True when the row has a multiline comment continuing into next line
+ml_comment: bool,
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Init/deinit
@@ -22,6 +25,7 @@ pub fn init(allocator: std.mem.Allocator) !Row {
         .chars = try .initCapacity(allocator, initial_row_size),
         .render = &.{},
         .hl = &.{},
+        .ml_comment = false,
     };
 }
 
