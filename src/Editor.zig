@@ -279,6 +279,8 @@ fn processKeypress(e: *Editor) !void {
     switch (k) {
         .ctrl_k => static.verbatim = true,
 
+        .ctrl_f => try e.find(),
+
         .ctrl_q => {
             if (B.dirty and static.q > 0) {
                 try e.statusMessage(message.status.get("unsaved").?, .{static.q});
@@ -538,6 +540,19 @@ fn insertNewLine(e: *Editor) !void {
     // set cursor position at the start of the new line
     V.cx = ind;
     V.cwant = ind;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//                              Find
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Start the search prompt.
+fn find(e: *Editor) !void {
+    const saved = e.view;
+    var query = try e.promptForInput("/", saved, findCallback);
+    query.deinit(e.alc);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
