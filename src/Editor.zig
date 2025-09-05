@@ -694,6 +694,39 @@ fn findCallback(e: *Editor, ca: t.PromptCbArgs) t.EditorError!void {
     }
 }
 
+/// Start a search forwards.
+fn findForward(e: *Editor, query: []const u8, pos: *t.Pos) ?[]const u8 {
+    var col = pos.col;
+    var i = pos.lnr;
+
+    while (i < e.buffer.rows.items.len) : (i += 1) {
+        const rowchars = e.rowAt(i).chars.items;
+
+        if (indexOf(u8, rowchars[col..], query)) |m| {
+            pos.lnr = i;
+            return rowchars[(col + m)..(col + m + query.len)];
+        }
+
+        col = 0; // reset search column
+    }
+
+    if (!opt.wrapscan) {
+        return null;
+    }
+
+    // wrapscan enabled, search from start of the file to current row
+    i = 0;
+    while (i <= pos.lnr) : (i += 1) {
+        const rowchars = e.rowAt(i).chars.items;
+
+        if (indexOf(u8, rowchars, query)) |m| {
+            pos.lnr = i;
+            return rowchars[m .. m + query.len];
+        }
+    }
+    return null;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              View operations
