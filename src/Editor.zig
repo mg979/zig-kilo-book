@@ -133,7 +133,7 @@ fn saveFile(e: *Editor) !void {
     var B = &e.buffer;
 
     if (B.filename == null) {
-        var al = try e.promptForInput(message.prompt.get("fname").?);
+        var al = try e.promptForInput(message.prompt.get("fname").?, .{}, null);
         defer al.deinit(e.alc);
 
         if (al.items.len > 0) {
@@ -850,10 +850,13 @@ fn drawMessageBar(e: *Editor) !void {
 ///////////////////////////////////////////////////////////////////////////////
 
 /// Start a prompt in the message area, return the user input.
-/// Prompt is terminated with either .esc or .enter keys.
+/// At each keypress, the prompt callback is invoked, with a final invocation
+/// after the prompt has been terminated with either .esc or .enter keys.
 /// Prompt is also terminated by .backspace if there is no character left in
 /// the input.
-fn promptForInput(e: *Editor, prompt: []const u8) !t.Chars {
+fn promptForInput(e: *Editor, prompt: []const u8, saved: t.View, cb: ?t.PromptCb) !t.Chars {
+    _ = cb;
+    _ = saved;
     var al = try t.Chars.initCapacity(e.alc, 80);
 
     while (true) {

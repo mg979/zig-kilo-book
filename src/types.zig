@@ -82,6 +82,30 @@ pub const Cwant = enum(u8) {
 
 ///////////////////////////////////////////////////////////////////////////////
 //
+//                              Callbacks
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// The prompt callback function type
+pub const PromptCb = fn (*Editor, PromptCbArgs) EditorError!void;
+
+/// Arguments for the prompt callback
+pub const PromptCbArgs = struct {
+    /// Current input entered by user
+    input: *Chars,
+
+    /// Last typed key
+    key: Key,
+
+    /// Saved view, in case it needs to be restored
+    saved: View,
+
+    /// Becomes true in the last callback invocation
+    final: bool = false,
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//
 //                              Highlight
 //
 ///////////////////////////////////////////////////////////////////////////////
