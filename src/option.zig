@@ -10,6 +10,9 @@ pub var scroll_off: u8 = 2;
 /// Copy indent from current line when starting a new line
 pub var autoindent = true;
 
+/// Searches wrap around the end of the file
+pub var wrapscan = true;
+
 /// Wrap text over a new line, when current line becomes longer than this value
 pub var textwidth = struct {
     enabled: bool = true,
