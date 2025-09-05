@@ -1206,6 +1206,62 @@ fn updateHighlight(e: *Editor, ix: usize) !void {
         return;
     }
 
+    //////////////////////////////////////////
+    //          Top-level symbols
+    //////////////////////////////////////////
+
+    // length of the rendered row
+    const rowlen = row.render.len;
+
+    // syntax definition
+    const s = e.buffer.syndef.?;
+
+    // line comment leader
+    const lc = s.lcmt;
+
+    // multiline comment leaders
+    const mlc = s.mlcmt;
+
+    // syntax flags
+    const flags = s.flags;
+
+    // character is preceded by a separator
+    var prev_sep = true;
+
+    // character is preceded by a backslash
+    var escaped = false;
+
+    // character is inside a string or char literal
+    var in_string = false;
+    var in_char = false;
+    var delimiter: u8 = 0;
+
+    // line is in a multiline comment
+    var in_mlcomment = ix > 0 and e.buffer.rows.items[ix - 1].ml_comment;
+
+    // all keywords in the syntax definition, subdivided by kinds
+    // each kind has its own specific highlight
+    const all_syn_keywords = [_]struct {
+        kind: []const []const u8, // array with keywords of some kind
+        hl: t.Highlight,
+    }{
+        .{ .kind = s.keywords, .hl = t.Highlight.keyword },
+        .{ .kind = s.types,    .hl = t.Highlight.types },
+        .{ .kind = s.builtin,  .hl = t.Highlight.builtin },
+        .{ .kind = s.constant, .hl = t.Highlight.constant },
+        .{ .kind = s.preproc,  .hl = t.Highlight.preproc },
+    };
+
+    var i: usize = 0;
+    toplevel: while (i < rowlen) {
+        if (asc.isWhitespace(row.render[i])) { // skip whitespaces
+            prev_sep = true;
+            i += 1;
+            continue :toplevel;
+        }
+        prev_sep = str.isSeparator(row.render[i]);
+        i += 1;
+    } // end :top-level
 }
 
 ///////////////////////////////////////////////////////////////////////////////
