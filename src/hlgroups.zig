@@ -28,6 +28,14 @@ pub const hlGroups: [n_hl]t.HlGroup = arr: {
         .italic = false,
         .underline = false,
     };
+    hlg[int(.nonprint)] = .{
+        .fg = FgColor.white,
+        .bg = BgColor.default,
+        .reverse = true,
+        .bold = false,
+        .italic = false,
+        .underline = false,
+    };
     hlg[int(.err)] = .{
         .fg = FgColor.red_bright,
         .bg = BgColor.default,

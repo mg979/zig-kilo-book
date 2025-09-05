@@ -250,12 +250,35 @@ fn processKeypress(e: *Editor) !void {
 
     const static = struct {
         var q: u8 = opt.quit_times;
+        var verbatim: bool = false;
     };
 
+    if (static.verbatim) {
+        static.verbatim = false;
+        switch (k) {
+            // these cause trouble, don't insert them
+            .enter,
+            .ctrl_h,
+            .backspace,
+            .ctrl_j,
+            .ctrl_k,
+            .ctrl_l,
+            .ctrl_u,
+            .ctrl_z,
+            => {
+                try e.errorMessage(message.errors.get("nonprint").?, .{ k });
+                return;
+            },
+            else => try e.insertChar(@intFromEnum(k)),
+        }
+        return;
+    }
     const B = &e.buffer;
     const V = &e.view;
 
     switch (k) {
+        .ctrl_k => static.verbatim = true,
+
         .ctrl_q => {
             if (B.dirty and static.q > 0) {
                 try e.statusMessage(message.status.get("unsaved").?, .{static.q});
@@ -727,7 +750,16 @@ fn drawRows(e: *Editor) !void {
 
             // loop characters of the rendered row
             for (rline[0..len], 0..) |c, i| {
-                if (hl[i] != current_color) {
+                if (c != '\t' and !asc.isPrint(c)) {
+                    // for example, turn Ctrl-A into 'A' with reversed colors
+                    current_color = t.Highlight.nonprint;
+                    try e.toSurface(t.HlGroup.attr(.nonprint));
+                    try e.toSurface(switch (c) {
+                        0...26 => '@' + c,
+                        else => '?',
+                    });
+                }
+                else if (hl[i] != current_color) {
                     const color = hl[i];
                     current_color = color;
                     try e.toSurface(t.HlGroup.attr(color));

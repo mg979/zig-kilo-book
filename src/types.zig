@@ -94,6 +94,9 @@ pub const Highlight = enum(u8) {
     /// Incremental search highlight
     incsearch,
 
+    /// Highlight for non-printable characters
+    nonprint,
+
     /// Highlight for error messages
     err,
 };
