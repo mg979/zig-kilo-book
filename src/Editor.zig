@@ -59,7 +59,7 @@ pub fn startUp(e: *Editor, path: ?[]const u8) !void {
     }
 
     while (e.should_quit == false) {
-        // refresh the screen
+        try e.refreshScreen();
         try e.processKeypress();
     }
 }
@@ -182,6 +182,37 @@ fn processKeypress(e: *Editor) !void {
 
     // reset quit counter for any keypress that isn't Ctrl-Q
     static.q = 3;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+//                              Screen update
+//
+///////////////////////////////////////////////////////////////////////////////
+
+/// Full refresh of the screen.
+fn refreshScreen(e: *Editor) !void {
+    e.surface.clearRetainingCapacity();
+
+    try e.toSurface(ansi.BgDefault);
+    try e.toSurface(ansi.HideCursor);
+    try e.toSurface(ansi.CursorTopLeft);
+
+    try e.drawRows();
+    // try e.drawStatusline();
+    // try e.drawMessageBar();
+
+    const V = &e.view;
+
+    // move cursor to its current position (could have been moved with keys)
+    var buf: [32]u8 = undefined;
+    const row = V.cy - V.rowoff + 1;
+    const col = V.rx - V.coloff + 1;
+    try e.toSurface(try ansi.moveCursorTo(&buf, row, col));
+
+    try e.toSurface(ansi.ShowCursor);
+
+    try linux.write(e.surface.items);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

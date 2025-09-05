@@ -76,6 +76,11 @@ pub fn getCursorPosition() !t.Screen {
     return screen;
 }
 
+/// Return the escape sequence to move the cursor to a position.
+pub fn moveCursorTo(buf: []u8, row: usize, col: usize) ![]const u8 {
+    return std.fmt.bufPrint(buf, CSI ++ "{};{}H", .{ row, col });
+}
+
 /// Read a character from stdin. Wait until at least one character is
 /// available.
 pub fn readKey() !t.Key {
