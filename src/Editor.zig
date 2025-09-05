@@ -1463,6 +1463,43 @@ fn updateHighlight(e: *Editor, ix: usize) !void {
         }
         if (i == rowlen) break :toplevel;
 
+        // keywords
+        if (prev_sep) {
+            kwloop: for (all_syn_keywords) |keywords| {
+                for (keywords.kind) |kw| {
+                    const kwend = i + kw.len; // index where keyword would end
+
+                    // separator or end of row after keyword
+                    if ((kwend < rowlen and str.isSeparator(row.render[kwend]))
+                        or kwend == rowlen)
+                    {
+                        if (str.eql(row.render[i..kwend], kw)) {
+                            @memset(row.hl[i..kwend], keywords.hl);
+                            i += kw.len;
+                            break :kwloop;
+                        }
+                    }
+                }
+            }
+
+            if (flags.uppercase) {
+                var upper = false;
+                const begin = i;
+                upp: while (i < rowlen and !str.isSeparator(row.render[i])) {
+                    if (!asc.isUpper(row.render[i]) and row.render[i] != '_') {
+                        upper = false;
+                        break :upp;
+                    }
+                    upper = true;
+                    i += 1;
+                }
+                if (upper and i - begin > 1) {
+                    @memset(row.hl[begin..i], t.Highlight.uppercase);
+                }
+            }
+            prev_sep = false;
+            continue :toplevel;
+        }
         prev_sep = str.isSeparator(row.render[i]);
         i += 1;
     } // end :top-level
