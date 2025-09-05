@@ -555,6 +555,145 @@ fn find(e: *Editor) !void {
     query.deinit(e.alc);
 }
 
+/// Called by promptForInput() for every valid inserted character.
+/// The saved view is restored when the current query isn't found, or when
+/// backspace clears the query, so that the search starts from the original
+/// position.
+fn findCallback(e: *Editor, ca: t.PromptCbArgs) t.EditorError!void {
+    const static = struct {
+        var found: bool = false;
+        var view: t.View = .{};
+        var pos: t.Pos = .{};
+        var oldhl: []t.Highlight = &.{};
+    };
+
+    const empty = ca.input.items.len == 0;
+    const numrows = e.buffer.rows.items.len;
+
+    // restore line highlight before incsearch highlight, or clean up
+    if (static.oldhl.len > 0) {
+        @memcpy(e.rowAt(static.pos.lnr).hl, static.oldhl);
+    }
+
+    // clean up
+    if (ca.final) {
+        e.alc.free(static.oldhl);
+        static.oldhl = &.{};
+        if (empty or ca.key == .esc) {
+            e.view = ca.saved;
+        }
+        if (!static.found and ca.key == .enter) {
+            try e.statusMessage("No match found", .{});
+        }
+        static.found = false;
+        return;
+    }
+
+    // Query is empty so no need to search, but restore position
+    if (empty) {
+        static.found = false;
+        e.view = ca.saved;
+        return;
+    }
+
+    // when pressing backspace we restore the previously saved view
+    // cursor might move or not, depending on whether there is a match at
+    // cursor position
+    if (ca.key == .backspace or ca.key == .ctrl_h) {
+        e.view = static.view;
+    }
+
+    //////////////////////////////////////////
+    //   Find the starting position
+    //////////////////////////////////////////
+
+    const V = &e.view;
+
+    const prev = ca.key == .ctrl_t;
+    const next = ca.key == .ctrl_g;
+
+    // current cursor position
+    var pos = t.Pos{ .lnr = V.cy, .col = V.cx };
+
+    const eof = V.cy == numrows;
+    const last_char_in_row = !eof and V.rx == e.currentRow().render.len;
+    const last_row = V.cy == numrows - 1;
+
+    // must move the cursor forward before searching when we don't want to
+    // match at cursor position
+    const step_fwd = ca.key != .backspace and (next or empty or !static.found);
+
+    if (step_fwd) {
+        if (eof or (last_row and last_char_in_row)) {
+            if (!opt.wrapscan) { // restart from the beginning of the file?
+                return;
+            }
+        }
+        else if (last_char_in_row) { // start searching from next line
+            pos.lnr = V.cy + 1;
+        }
+        else { // start searching after current column
+            pos.col = V.cx + 1;
+            pos.lnr = V.cy;
+        }
+    }
+
+    //////////////////////////////////////////
+    //          Start the search
+    //////////////////////////////////////////
+
+    var match: ?[]const u8 = null;
+
+    if (!prev) {
+        match = e.findForward(ca.input.items, &pos);
+    }
+    else {
+        match = e.findBackward(ca.input.items, &pos);
+    }
+
+    // If wrapscan, no problems: no match is no match.
+    // Otherwise it can be that we had a match, but another one isn't found in
+    // the current searching direction: then we only update static.found if:
+    // - either not pressing ctrl-g or ctrl-t (next or prev)
+    // - or we didn't have a match to begin with
+    if (opt.wrapscan or !(next or prev) or !static.found) {
+        static.found = match != null;
+    }
+
+    const row = e.rowAt(pos.lnr);
+
+    if (match) |m| {
+        V.cy = pos.lnr;
+        V.cx = &m[0] - &row.chars.items[0];
+
+        static.view = e.view;
+        static.pos = .{ .lnr = pos.lnr, .col = V.cx };
+
+        // first make a copy of current highlight, to be restored later
+        static.oldhl = try e.alc.realloc(static.oldhl, row.render.len);
+        @memcpy(static.oldhl, row.hl);
+
+        // apply search highlight
+        const start = row.cxToRx(V.cx);
+        const end = row.cxToRx(V.cx + m.len);
+        @memset(row.hl[start .. end], t.Highlight.incsearch);
+    }
+    else if (!opt.wrapscan and static.found and (next or prev)) {
+        // the next match wasn't found in the searching direction
+        // we still set the highlight for the current match, since the original
+        // highlight has been restored at the top of the function
+        // this can definitely happen with !wrapscan
+        const start = row.cxToRx(static.pos.col);
+        const end = row.cxToRx(static.pos.col + ca.input.items.len);
+        @memset(row.hl[start .. end], t.Highlight.incsearch);
+    }
+    else {
+        // a match wasn't found because the input couldn't be found
+        // restore the original view (from before the start of the search)
+        e.view = ca.saved;
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              View operations
