@@ -17,6 +17,7 @@ const prompt_messages = .{
 
 const error_messages = .{
     .{ "ioerr", "Can't save! I/O error: {s}" },
+    .{ "nonprint", "Can't insert character: {any}" },
 };
 
 pub const status = std.StaticStringMap([]const u8).initComptime(status_messages);
