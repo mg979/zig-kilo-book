@@ -1201,6 +1201,11 @@ fn updateHighlight(e: *Editor, ix: usize) !void {
     // reset the row highlight to normal
     row.hl = try e.alc.realloc(row.hl, row.render.len);
     @memset(row.hl, .normal);
+
+    if (e.buffer.syntax == null or opt.syntax == false) {
+        return;
+    }
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////

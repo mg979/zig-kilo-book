@@ -19,5 +19,8 @@ pub var textwidth = struct {
     len: u8 = 79,
 } {};
 
+/// Enable syntax highlighting
+pub var syntax = true;
+
 pub const version_str = "0.1";
 pub const quit_times = 3;
