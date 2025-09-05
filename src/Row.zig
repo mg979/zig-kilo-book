@@ -8,6 +8,9 @@ chars: t.Chars,
 /// Array with the visual representation of the row
 render: []u8,
 
+/// Array with the highlight of the rendered row
+hl: []t.Highlight,
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //                              Init/deinit
@@ -18,12 +21,14 @@ pub fn init(allocator: std.mem.Allocator) !Row {
     return Row{
         .chars = try .initCapacity(allocator, initial_row_size),
         .render = &.{},
+        .hl = &.{},
     };
 }
 
 pub fn deinit(row: *Row, allocator: std.mem.Allocator) void {
     row.chars.deinit(allocator);
     allocator.free(row.render);
+    allocator.free(row.hl);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
