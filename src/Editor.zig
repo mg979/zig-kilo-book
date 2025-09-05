@@ -126,6 +126,48 @@ fn openFile(e: *Editor, path: []const u8) !void {
     B.dirty = false;
 }
 
+/// Try to save the current file, prompt for a file name if currently not set.
+/// Currently saving the file fails if directory doesn't exist, and there is no
+/// tilde expansion.
+fn saveFile(e: *Editor) !void {
+    var B = &e.buffer;
+
+    if (B.filename == null) {
+        // will prompt for a filename
+        return;
+    }
+
+    // determine number of bytes to write, make room for \n characters
+    var fsize: usize = B.rows.items.len;
+    for (B.rows.items) |row| {
+        fsize += row.chars.items.len;
+    }
+
+    const file = std.fs.cwd().createFile(B.filename.?, .{ .truncate = true });
+    if (file) |f| {
+        var buf: [1024]u8 = undefined;
+        var writer = f.writer(&buf);
+        defer f.close();
+        // for each line, write the bytes, then the \n character
+        for (B.rows.items) |row| {
+            writer.interface.writeAll(row.chars.items) catch |err| return e.ioerr(err);
+            writer.interface.writeByte('\n') catch |err| return e.ioerr(err);
+        }
+        // write what's left in the buffer
+        try writer.interface.flush();
+        try e.statusMessage(message.status.get("bufwrite").?, .{
+            B.filename.?, B.rows.items.len, fsize
+        });
+        B.dirty = false;
+        return;
+    }
+    else |err|{
+        e.alc.free(B.filename.?);
+        B.filename = null;
+        return e.ioerr(err);
+    }
+}
+
 /// Handle an error of type IoError by printing an error message, without
 /// quitting the editor.
 fn ioerr(e: *Editor, err: t.IoError) !void {
